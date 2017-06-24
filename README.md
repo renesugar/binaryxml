@@ -10,6 +10,7 @@ Setup a workspace:
 $ mkdir -p workspaces/nubix/agent/src/github.com/BixData
 $ cd workspaces/nubix
 $ export GOPATH=`pwd`
+$ go get github.com/tdewolff/minify/xml
 $ cd agent/src/github.com/BixData
 $ git clone <this repo>
 $ cd <this repo>
