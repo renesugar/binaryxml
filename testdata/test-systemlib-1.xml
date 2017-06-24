@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<BixRequest>
+  <toNamespace>VirtualMachines</toNamespace>
+  <request>Testing</request>
+  <moid>6</moid>
+  <mid>1</mid>
+</BixRequest>

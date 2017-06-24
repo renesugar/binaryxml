@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<BixRequest>
+  <toNamespace>SubscriptionProvider</toNamespace>
+  <request>Subscribe</request>
+  <moid>2</moid>
+  <mid>2</mid>
+  <Data>
+    <moid>3</moid>
+    <Query>
+      <namespace>Common_CPU</namespace>
+      <instance>_Total</instance>
+      <key>*</key>
+      <field>IdleTime</field>
+      <interval>60</interval>
+      <userkey/>
+      <tablespace>SB</tablespace>
+    </Query>
+  </Data>
+</BixRequest>
