@@ -23,7 +23,10 @@ func TestReadBinaryFixture1(t *testing.T) {
 	expectedXml := string(expectedXmlBinary)
 	
 	// Decode binary xml and test
-	xml := binaryxml.Decode(binaryXml)
+	xml, err := binaryxml.Decode(binaryXml)
+	if err != nil {
+		t.Errorf("Failed decoding binary xml %s", err)
+	}
 	fmt.Println(xml)
 	if (xml != expectedXml) {
 		t.Errorf("Failed converting binary xml; expected %s; got %s", expectedXml, xml)
