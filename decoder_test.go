@@ -22,6 +22,10 @@ func TestReadBinaryFixture3(t *testing.T) {
 	doTest("test-systemlib-3", t)
 }
 
+func TestReadBinaryFixture4(t *testing.T) {
+	doTest("test-systemlib-4", t)
+}
+
 
 func doTest(fixtureName string, t *testing.T) {
 	// Configure XML minifier, and use during comparisons to minimize superficial differences

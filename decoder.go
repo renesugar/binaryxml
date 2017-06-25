@@ -5,6 +5,7 @@ import (
 	"container/list"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 )
@@ -118,16 +119,16 @@ func readSerialSection(reader io.Reader, elementNamesById map[uint16]string, res
 		case int1btype:
 			var value int8
 			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return malformedError}
-			response.WriteString(string(value))
+			response.WriteString(fmt.Sprintf("%d", value))
 		case nodetype:
 		case uint1btype:
 			var value uint8
 			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return malformedError}
-			response.WriteString(string(value))
+			response.WriteString(fmt.Sprintf("%d", value))
 		case int2btype:
 			var value int16
 			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return malformedError}
-			response.WriteString(string(value))
+			response.WriteString(fmt.Sprintf("%d", value))
 		case strtype:
 			value, err := readNullTerminatedString(reader)
 			if err != nil {return malformedError}
@@ -135,23 +136,23 @@ func readSerialSection(reader io.Reader, elementNamesById map[uint16]string, res
 		case uint2btype:
 			var value uint16
 			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return malformedError}
-			response.WriteString(string(value))
+			response.WriteString(fmt.Sprintf("%d", value))
 		case int4btype:
 			var value int32
 			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return malformedError}
-			response.WriteString(string(value))
+			response.WriteString(fmt.Sprintf("%d", value))
 		case uint4btype:
 			var value uint32
 			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return malformedError}
-			response.WriteString(string(value))
+			response.WriteString(fmt.Sprintf("%d", value))
 		case int8btype:
 			var value int64
 			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return malformedError}
-			response.WriteString(string(value))
+			response.WriteString(fmt.Sprintf("%d", value))
 		case uint8btype:
 			var value uint64
 			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return malformedError}
-			response.WriteString(string(value))
+			response.WriteString(fmt.Sprintf("%d", value))
 		}
 		
 		if dataType == endtagtype {
