@@ -11,10 +11,6 @@ import (
 )
 
 const (
-	tablebegin  uint8 = 124
-	tableend    uint8 = 125
-	serialbegin uint8 = 126
-	serialend   uint8 = 127
 )
 
 type BinXMLType uint8
@@ -33,6 +29,11 @@ const (
 	strtype
 	binarytype
 	endtagtype
+	
+	tablebegin  BinXMLType = 124
+	tableend    BinXMLType = 125
+	serialbegin BinXMLType = 126
+	serialend   BinXMLType = 127
 )
 
 var malformedError = errors.New("Content is not valid binary XML")
@@ -42,9 +43,9 @@ func Decode(data []byte) (string, error) {
 	reader := bytes.NewReader(data)
 	
 	// Read table begin marker
-	var uint8Value uint8
-	err := binary.Read(reader, binary.BigEndian, &uint8Value)
-	if err != nil || uint8Value != tablebegin {return "", malformedError}
+	var token BinXMLType
+	err := binary.Read(reader, binary.BigEndian, &token)
+	if err != nil || token != tablebegin {return "", malformedError}
 	
 	// Read table length
 	var tableLength uint16
@@ -61,22 +62,18 @@ func Decode(data []byte) (string, error) {
 // 	fmt.Printf("elementNamesById: %v\n", elementNamesById)
 	
 	// Read table end marker
-	err = binary.Read(reader, binary.BigEndian, &uint8Value)
-	if err != nil || uint8Value != tableend {return "", malformedError}
+	err = binary.Read(reader, binary.BigEndian, &token)
+	if err != nil || token != tableend {return "", malformedError}
 	
 	// Read serial begin marker
-	err = binary.Read(reader, binary.BigEndian, &uint8Value)
-	if err != nil || uint8Value != serialbegin {return "", malformedError}
+	err = binary.Read(reader, binary.BigEndian, &token)
+	if err != nil || token != serialbegin {return "", malformedError}
 	
 	// Read serial section
 	var xmlBuffer bytes.Buffer
 	xmlBuffer.WriteString("<?xml version=\"1.0\"?>\n")
 	err = readSerialSection(reader, elementNamesById, &xmlBuffer)
-// 	if err != nil {return "", malformedError}
-	
-	// Read serial end marker
-	err = binary.Read(reader, binary.BigEndian, &uint8Value)
-// 	if err != nil || uint8Value != serialend {return "", malformedError}
+	if err != nil {return "", malformedError}
 	
 	return xmlBuffer.String(), nil
 }
@@ -102,6 +99,10 @@ func readSerialSection(reader io.Reader, elementNamesById map[uint16]string, res
 		err := binary.Read(reader, binary.BigEndian, &dataType)
 		if err != nil {return err}
 		
+		// Detect serial end marker
+		if dataType == serialend {return nil}
+		
+		// Write begin of element
 		if isElementType(dataType) {
 			var key uint16
 			if err = binary.Read(reader, binary.BigEndian, &key); err != nil {return malformedError}
@@ -111,6 +112,7 @@ func readSerialSection(reader io.Reader, elementNamesById map[uint16]string, res
 			response.WriteString("<" + elementName + ">")
 		}
 		
+		// Write element value
 		switch dataType {
 		case float4type:
 			var value float32
@@ -155,6 +157,7 @@ func readSerialSection(reader io.Reader, elementNamesById map[uint16]string, res
 			response.WriteString(fmt.Sprintf("%d", value))
 		}
 		
+		// Write end of element
 		if dataType == endtagtype {
 			element := elementNameStack.Front()
 			if element == nil {return malformedError}
