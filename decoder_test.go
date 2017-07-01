@@ -10,24 +10,24 @@ import (
 )
 
 
-func TestReadBinaryFixture1(t *testing.T) {
-	doTest("test-systemlib-1", t)
+func TestDecodeBinaryFixture1(t *testing.T) {
+	doDecodeTest("test-systemlib-1", t)
 }
 
-func TestReadBinaryFixture2(t *testing.T) {
-	doTest("test-systemlib-2", t)
+func TestDecodeBinaryFixture2(t *testing.T) {
+	doDecodeTest("test-systemlib-2", t)
 }
 
-func TestReadBinaryFixture3(t *testing.T) {
-	doTest("test-systemlib-3", t)
+func TestDecodeBinaryFixture3(t *testing.T) {
+	doDecodeTest("test-systemlib-3", t)
 }
 
-func TestReadBinaryFixture4(t *testing.T) {
-	doTest("test-systemlib-4", t)
+func TestDecodeBinaryFixture4(t *testing.T) {
+	doDecodeTest("test-systemlib-4", t)
 }
 
 
-func doTest(fixtureName string, t *testing.T) {
+func doDecodeTest(fixtureName string, t *testing.T) {
 	// Configure XML minifier, and use during comparisons to minimize superficial differences
 	minifier := minify.New()
 	minifier.AddFunc("text/xml", xml.Minify) 
@@ -51,16 +51,18 @@ func doTest(fixtureName string, t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed decoding binary xml %+v", err)
 	}
+	
+	// Minify expected vs actual xml, to minimize inconsequential differences
 	xml, err = minifier.String("text/xml", xml)
 	if err != nil {
 		t.Errorf("Failed minifying xml for comparison %+v", err)
 	}
-	
-	// Minify expected vs actual xml, then compare
 	var minifiedXml string
 	var minifiedExpectedXml string
 	minifiedXml, err = minifier.String("text/xml", xml)
 	minifiedExpectedXml, err = minifier.String("text/xml", expectedXml)
+	
+	// compare
 	if (minifiedXml != minifiedExpectedXml) {
 		t.Errorf("Failed converting binary xml; expected %s; got %s", expectedXml, xml)
 	}

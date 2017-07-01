@@ -10,32 +10,6 @@ import (
 	"strconv"
 )
 
-const (
-)
-
-type BinXMLType uint8
-const (
-	undefinedtype BinXMLType = iota
-	nodetype
-	int1btype
-	uint1btype
-	int2btype
-	uint2btype
-	int4btype
-	uint4btype
-	int8btype
-	uint8btype
-	float4type
-	strtype
-	binarytype
-	endtagtype
-	
-	tablebegin  BinXMLType = 124
-	tableend    BinXMLType = 125
-	serialbegin BinXMLType = 126
-	serialend   BinXMLType = 127
-)
-
 var malformedError = errors.New("Content is not valid binary XML")
 
 
@@ -83,7 +57,7 @@ func readNullTerminatedString(reader io.Reader) (string, error) {
 	var buffer bytes.Buffer
 	for {
 		var byte uint8
-		if err := binary.Read(reader, binary.BigEndian, &byte); err != nil {return "", malformedError}
+		if err := binary.Read(reader, binary.BigEndian, &byte); err != nil {return "", err}
 		if byte == 0 {break}
 		buffer.WriteString(string(byte))
 	}
@@ -91,7 +65,7 @@ func readNullTerminatedString(reader io.Reader) (string, error) {
 }
 
 
-func readSerialSection(reader io.Reader, elementNamesById map[uint16]string, response* bytes.Buffer) error {
+func readSerialSection(reader io.Reader, elementNamesById map[uint16]string, response *bytes.Buffer) error {
 	elementNameStack := list.New()
 	for {
 		// Read datatype
@@ -105,7 +79,7 @@ func readSerialSection(reader io.Reader, elementNamesById map[uint16]string, res
 		// Write begin of element
 		if isElementType(dataType) {
 			var key uint16
-			if err = binary.Read(reader, binary.BigEndian, &key); err != nil {return malformedError}
+			if err = binary.Read(reader, binary.BigEndian, &key); err != nil {return err}
 			elementName, ok := elementNamesById[key]
 			if !ok {return malformedError}
 			elementNameStack.PushFront(elementName)
@@ -116,20 +90,20 @@ func readSerialSection(reader io.Reader, elementNamesById map[uint16]string, res
 		switch dataType {
 		case float4type:
 			var value float32
-			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return malformedError}
+			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return err}
 			response.WriteString(strconv.FormatFloat(float64(value), 'f', 6, 32))
 		case int1btype:
 			var value int8
-			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return malformedError}
+			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return err}
 			response.WriteString(fmt.Sprintf("%d", value))
 		case nodetype:
 		case uint1btype:
 			var value uint8
-			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return malformedError}
+			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return err}
 			response.WriteString(fmt.Sprintf("%d", value))
 		case int2btype:
 			var value int16
-			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return malformedError}
+			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return err}
 			response.WriteString(fmt.Sprintf("%d", value))
 		case strtype:
 			value, err := readNullTerminatedString(reader)
@@ -137,23 +111,23 @@ func readSerialSection(reader io.Reader, elementNamesById map[uint16]string, res
 			response.WriteString(value)
 		case uint2btype:
 			var value uint16
-			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return malformedError}
+			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return err}
 			response.WriteString(fmt.Sprintf("%d", value))
 		case int4btype:
 			var value int32
-			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return malformedError}
+			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return err}
 			response.WriteString(fmt.Sprintf("%d", value))
 		case uint4btype:
 			var value uint32
-			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return malformedError}
+			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return err}
 			response.WriteString(fmt.Sprintf("%d", value))
 		case int8btype:
 			var value int64
-			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return malformedError}
+			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return err}
 			response.WriteString(fmt.Sprintf("%d", value))
 		case uint8btype:
 			var value uint64
-			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return malformedError}
+			if err = binary.Read(reader, binary.BigEndian, &value); err != nil {return err}
 			response.WriteString(fmt.Sprintf("%d", value))
 		}
 		
