@@ -3,7 +3,6 @@ package binaryxml
 import (
 	"encoding/binary"
 	"encoding/xml"
-	"fmt"
 	"io"
 	"github.com/cevaris/ordered_map"
 	"reflect"
@@ -16,7 +15,6 @@ type BinaryXMLEncoder struct {
 
 
 func (encoder *BinaryXMLEncoder) Encode(v interface{}) error {
-	fmt.Printf("Encode() %+v\n", v)
 	table := ordered_map.NewOrderedMap()
 	if err := encoder.populateTable(reflect.ValueOf(v), nil, table); err != nil {return err}
 	if err := encoder.writeTable(table); err != nil {return err}
@@ -66,7 +64,6 @@ func (encoder *BinaryXMLEncoder) populateTable(value reflect.Value, fieldInfo *f
 
 
 func (encoder *BinaryXMLEncoder) marshalValue(value reflect.Value, fieldInfo *fieldInfo, table *ordered_map.OrderedMap) error {
-	fmt.Printf("marshalValue %v\n", value)
 	if !value.IsValid() {return nil}
 	
 	// Drill into interfaces and pointers
@@ -76,8 +73,6 @@ func (encoder *BinaryXMLEncoder) marshalValue(value reflect.Value, fieldInfo *fi
 	}
 	kind := value.Kind()
 	type_ := value.Type()
-	
-	fmt.Printf("Kind=%s Type=%s\n", kind, type_)
 	
 	// Slices and arrays iterate over the elements. They do not have an enclosing tag.
 	if (kind == reflect.Slice || kind == reflect.Array) && type_.Elem().Kind() != reflect.Uint8 {
@@ -116,6 +111,13 @@ func (encoder *BinaryXMLEncoder) marshalValue(value reflect.Value, fieldInfo *fi
 		start.Name.Local = name
 	}
 	
+	// Write open element
+	{
+		elementNumber, _ := table.Get(start.Name.Local)
+		binary.Write(encoder.writer, binary.BigEndian, nodetype)
+		binary.Write(encoder.writer, binary.BigEndian, uint16(elementNumber.(int)))
+	}
+	
 	// Attributes
 	for i := range typeInfo.fields {
 		fieldInfo := &typeInfo.fields[i]
@@ -127,11 +129,13 @@ func (encoder *BinaryXMLEncoder) marshalValue(value reflect.Value, fieldInfo *fi
 		if fieldInfo.flags&fOmitEmpty != 0 && isEmptyValue(fv) {continue}
 		if fv.Kind() == reflect.Interface && fv.IsNil() {continue}
 	
-// 		fmt.Printf("*Start=%+v\n", start)
 		name := xml.Name{Space: fieldInfo.xmlns, Local: fieldInfo.name}
 		if err := marshalAttr(&start, name, fv, encoder.writer, table); err != nil {return err}
 	}
   	
+	// Write close element
+	binary.Write(encoder.writer, binary.BigEndian, endtagtype)
+	
 	return nil
 }
 
@@ -155,51 +159,28 @@ func isEmptyValue(v reflect.Value) bool {
 }
 
 
-// func EncodeXmlDecoder(decoder *xml.Decoder) ([]byte, error) {
-// 	fmt.Println("EncodeXmlDecoder()")
-// 	result := make([]byte, 0)
-// 	
-// 	for {
-// 		token, err := decoder.Token()
-// 		if token == nil {break}
-// 		if err != nil {return result, err}
-// 		
-// 		switch tokenType := token.(type) {
-// 			case xml.StartElement:
-// 				fmt.Printf("<%s>", tokenType.Name.Local)
-// // 				var s string
-// // 				decoder.DecodeElement(&s, &tokenType)
-// // 				fmt.Printf("value %s\n", s)
-// 			case xml.EndElement:
-// 				fmt.Printf("</%s>", tokenType.Name.Local)
-// 			case xml.CharData:
-// 				fmt.Printf("[%s]", string(tokenType))
-// 		}
-// 	}
-	
-	// TODO
-// 	return result, nil
-// }
-
-
 func marshalAttr(start *xml.StartElement, name xml.Name, value reflect.Value, writer io.Writer, table *ordered_map.OrderedMap) error {
-	var elementNumber uint16
-	fmt.Printf("marshalAttr %s=%d\n", name.Local, elementNumber)
-	fmt.Printf("kind %+v\n", value.Kind())
+	x, _ := table.Get(name.Local); elementNumber := uint16(x.(int))
 	switch value.Kind() {
 		case reflect.String:
+			binary.Write(writer, binary.BigEndian, strtype)
+			binary.Write(writer, binary.BigEndian, elementNumber)
 			writer.Write([]byte(value.String()))
 			writer.Write([]byte("\x00"))
 		case reflect.Uint64:
+			binary.Write(writer, binary.BigEndian, uint8btype)
+			binary.Write(writer, binary.BigEndian, elementNumber)
 			binary.Write(writer, binary.BigEndian, value.Uint())
 	}
+	
+	// Write close element
+	binary.Write(writer, binary.BigEndian, endtagtype)
+	
 	return nil
 }
 
 
 func (encoder *BinaryXMLEncoder) writeTable(table *ordered_map.OrderedMap) error {
-	fmt.Printf("writeTable %v\n", table)
-	
 	// Write table begin marker
 	if err := binary.Write(encoder.writer, binary.BigEndian, tablebegin); err != nil {return err}
 	
@@ -222,8 +203,6 @@ func (encoder *BinaryXMLEncoder) writeTable(table *ordered_map.OrderedMap) error
 
 
 func (encoder *BinaryXMLEncoder) writeSerial(value reflect.Value, fieldInfo *fieldInfo, table *ordered_map.OrderedMap) error {
-	fmt.Printf("writeSerial\n")
-	
 	// Write serial begin marker
 	if err := binary.Write(encoder.writer, binary.BigEndian, serialbegin); err != nil {return err}
 	
