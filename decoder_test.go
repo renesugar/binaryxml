@@ -34,15 +34,15 @@ func doDecodeTest(fixtureName string, t *testing.T) {
 
 	// Read fixtures
 	fixture := "testdata/" + fixtureName + ".binaryxml"
-	fmt.Printf("Testing fixture %s\n", fixture)
+	fmt.Printf("Testing decode with %s\n", fixture)
 	binaryXml, err := ioutil.ReadFile(fixture)
 	if err != nil {
-		t.Errorf("Failed opening test fixture %s", fixture)
+		t.Errorf("Failed opening %s", fixture)
 	}
 	fixture = "testdata/" + fixtureName + ".xml"
 	expectedXmlBinary, err := ioutil.ReadFile(fixture)
 	if err != nil {
-		t.Errorf("Failed opening test fixture %s", fixture)
+		t.Errorf("Failed opening %s", fixture)
 	}
 	expectedXml := string(expectedXmlBinary)
 	

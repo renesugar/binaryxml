@@ -167,34 +167,34 @@ func marshalAttr(start *xml.StartElement, name xml.Name, value reflect.Value, wr
 			binary.Write(writer, binary.BigEndian, elementNumber)
 			writer.Write([]byte(value.String()))
 			writer.Write([]byte("\x00"))
-    case reflect.Int8:
-      binary.Write(writer, binary.BigEndian, int1btype)
-      binary.Write(writer, binary.BigEndian, elementNumber)
-      binary.Write(writer, binary.BigEndian, int8(value.Int()))
-    case reflect.Int16:
-      binary.Write(writer, binary.BigEndian, int2btype)
-      binary.Write(writer, binary.BigEndian, elementNumber)
-      binary.Write(writer, binary.BigEndian, int16(value.Int()))
-    case reflect.Int32:
-      binary.Write(writer, binary.BigEndian, int4btype)
-      binary.Write(writer, binary.BigEndian, elementNumber)
-      binary.Write(writer, binary.BigEndian, int32(value.Int()))
-    case reflect.Int64:
-      binary.Write(writer, binary.BigEndian, int8btype)
-      binary.Write(writer, binary.BigEndian, elementNumber)
-      binary.Write(writer, binary.BigEndian, int64(value.Int()))
-    case reflect.Uint8:
-      binary.Write(writer, binary.BigEndian, uint1btype)
-      binary.Write(writer, binary.BigEndian, elementNumber)
-      binary.Write(writer, binary.BigEndian, uint8(value.Uint()))
-    case reflect.Uint16:
-      binary.Write(writer, binary.BigEndian, uint2btype)
-      binary.Write(writer, binary.BigEndian, elementNumber)
-      binary.Write(writer, binary.BigEndian, uint16(value.Uint()))
-    case reflect.Uint32:
-      binary.Write(writer, binary.BigEndian, uint4btype)
-      binary.Write(writer, binary.BigEndian, elementNumber)
-      binary.Write(writer, binary.BigEndian, uint32(value.Uint()))
+		case reflect.Int8:
+			binary.Write(writer, binary.BigEndian, int1btype)
+			binary.Write(writer, binary.BigEndian, elementNumber)
+			binary.Write(writer, binary.BigEndian, int8(value.Int()))
+		case reflect.Int16:
+			binary.Write(writer, binary.BigEndian, int2btype)
+			binary.Write(writer, binary.BigEndian, elementNumber)
+			binary.Write(writer, binary.BigEndian, int16(value.Int()))
+		case reflect.Int32:
+			binary.Write(writer, binary.BigEndian, int4btype)
+			binary.Write(writer, binary.BigEndian, elementNumber)
+			binary.Write(writer, binary.BigEndian, int32(value.Int()))
+		case reflect.Int64:
+			binary.Write(writer, binary.BigEndian, int8btype)
+			binary.Write(writer, binary.BigEndian, elementNumber)
+			binary.Write(writer, binary.BigEndian, int64(value.Int()))
+		case reflect.Uint8:
+			binary.Write(writer, binary.BigEndian, uint1btype)
+			binary.Write(writer, binary.BigEndian, elementNumber)
+			binary.Write(writer, binary.BigEndian, uint8(value.Uint()))
+		case reflect.Uint16:
+			binary.Write(writer, binary.BigEndian, uint2btype)
+			binary.Write(writer, binary.BigEndian, elementNumber)
+			binary.Write(writer, binary.BigEndian, uint16(value.Uint()))
+		case reflect.Uint32:
+			binary.Write(writer, binary.BigEndian, uint4btype)
+			binary.Write(writer, binary.BigEndian, elementNumber)
+			binary.Write(writer, binary.BigEndian, uint32(value.Uint()))
 		case reflect.Uint64:
 			binary.Write(writer, binary.BigEndian, uint8btype)
 			binary.Write(writer, binary.BigEndian, elementNumber)
