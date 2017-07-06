@@ -27,7 +27,7 @@ import (
 )
 
 type Person struct {
-	XMLName struct{} `xml:"BixRequest"`
+	XMLName struct{} `xml:"Person"`
 	First   string   `xml:"firstName"`
 	Last    string   `xml:"lastName"`
 	Age     uint8    `xml:"age"`
@@ -47,9 +47,9 @@ Setup a workspace:
 
 ```
 $ mkdir -p workspaces/nubix/agent/src/github.com/BixData
-$ cd workspaces/nubix
+$ cd workspaces/nubix/agent
 $ export GOPATH=`pwd`
-$ cd agent/src/github.com/BixData
+$ cd src/github.com/BixData
 $ git clone <this repo>
 $ cd <this repo>
 $ make gogets
