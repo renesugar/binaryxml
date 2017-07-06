@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<TestDoc>
+  <float32_0>0.0000000000</float32_0>
+  <float32_pi>3.1400001049</float32_pi>
+  <float32_negativepi>-3.1400001049</float32_negativepi>
+</TestDoc>
