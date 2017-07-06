@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<DataPluginDefinition>
+  <Namespace>
+    <name>Waveforms</name>
+    <display>Waveforms</display>
+    <version>1</version>
+    <Schema>
+      <name>schema</name>
+      <Instance>
+        <name>default</name>
+        <display>default</display>
+      </Instance>
+      <Field>
+        <name>sinewave</name>
+        <type>schema_uint32</type>
+        <display>sinewave</display>
+        <userdata>Custom field</userdata>
+      </Field>
+      <Field>
+        <name>random</name>
+        <type>schema_uint32</type>
+        <display>random</display>
+        <userdata>Custom field</userdata>
+      </Field>
+    </Schema>
+  </Namespace>
+</DataPluginDefinition>
