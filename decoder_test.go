@@ -26,6 +26,10 @@ func TestDecodeBinaryFixture4(t *testing.T) {
 	doDecodeTest("test-systemlib-4", t)
 }
 
+func TestDecodeBinaryFixture5(t *testing.T) {
+	doDecodeTest("test-systemlib-5", t)
+}
+
 
 func doDecodeTest(fixtureName string, t *testing.T) {
 	// Configure XML minifier, and use during comparisons to minimize superficial differences

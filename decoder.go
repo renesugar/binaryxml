@@ -86,7 +86,7 @@ func readSerialSection(reader io.Reader, elementNamesById map[uint16]string, res
 		case float4type:
 			var value float32
 			if err := binary.Read(reader, binary.BigEndian, &value); err != nil {return err}
-			response.WriteString(strconv.FormatFloat(float64(value), 'f', 6, 32))
+			response.WriteString(strconv.FormatFloat(float64(value), 'f', 10, 32))
 		case int1btype:
 			var value int8
 			if err := binary.Read(reader, binary.BigEndian, &value); err != nil {return err}
