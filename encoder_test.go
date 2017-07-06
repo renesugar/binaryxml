@@ -225,14 +225,15 @@ func TestEncodeFixture3(t *testing.T) {
 	file, _ := ioutil.TempFile("", "binaryxmlEncoderTest3")
 	writer := bufio.NewWriter(file)
 	fmt.Printf("Writing binary encoded xml file %s\n", file.Name())
-	if err := binaryxml.Encode(fixture3, writer); err != nil {t.Errorf("Failed encoding object as binary xml %+v", err)}
+	err = binaryxml.Encode(fixture3, writer)
+	assert.Nil(err)
 	writer.Flush()
 	
 	// Unmarshal binary XML file into 2nd Fixture3 structure
 	binaryXmlBytes, err := ioutil.ReadFile(file.Name())
 	if err != nil {t.Errorf("Failed opening generated binary xml file %s", file.Name)}
 	xmlString, err := binaryxml.Decode(binaryXmlBytes)
-	if err != nil {t.Errorf("Failed decoding binary xml %+v", err)}	
+	if err != nil {t.Errorf("Failed decoding binary xml %+v", err)}
 	secondFixture3 := Fixture3{}
 	err = xml.Unmarshal([]byte(xmlString), &secondFixture3)
 	assert.Nil(err)

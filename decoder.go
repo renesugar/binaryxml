@@ -4,13 +4,12 @@ import (
 	"bytes"
 	"container/list"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"io"
 	"strconv"
 )
 
-var malformedError = errors.New("Content is not valid binary XML")
+const malformedErrorStr = "Content is not valid binary XML; %s"
 
 
 func Decode(data []byte) (string, error) {
@@ -19,7 +18,7 @@ func Decode(data []byte) (string, error) {
 	// Read table begin marker
 	var token BinXMLType
 	if err := binary.Read(reader, binary.BigEndian, &token); err != nil {return "", err}
-	if token != tablebegin {return "", malformedError}
+	if token != tablebegin {return "", fmt.Errorf(malformedErrorStr, "missing table begin token")}
 	
 	// Read table length
 	var tableLength uint16
@@ -32,15 +31,14 @@ func Decode(data []byte) (string, error) {
 		if err != nil {return "", err}
 		elementNamesById[i] = name
 	}
-// 	fmt.Printf("elementNamesById: %v\n", elementNamesById)
 	
 	// Read table end marker
 	if err := binary.Read(reader, binary.BigEndian, &token); err != nil {return "", err}
-	if token != tableend {return "", malformedError}
+	if token != tableend {return "", fmt.Errorf(malformedErrorStr, "missing table end token")}
 	
 	// Read serial begin marker
 	if err := binary.Read(reader, binary.BigEndian, &token); err != nil {return "", err}
-	if token != serialbegin {return "", malformedError}
+	if token != serialbegin {return "", fmt.Errorf(malformedErrorStr, "missing serial begin token")}
 	
 	// Read serial section
 	var xmlBuffer bytes.Buffer
@@ -78,7 +76,7 @@ func readSerialSection(reader io.Reader, elementNamesById map[uint16]string, res
 			var key uint16
 			if err := binary.Read(reader, binary.BigEndian, &key); err != nil {return err}
 			elementName, ok := elementNamesById[key]
-			if !ok {return malformedError}
+			if !ok {return fmt.Errorf(malformedErrorStr, "no table entry for key")}
 			elementNameStack.PushFront(elementName)
 			response.WriteString("<" + elementName + ">")
 		}
@@ -132,7 +130,7 @@ func readSerialSection(reader io.Reader, elementNamesById map[uint16]string, res
 		if dataType == endtagtype {
 			element := elementNameStack.Front()
 			if element == nil {
-				return malformedError
+				return fmt.Errorf(malformedErrorStr, "too many close element tags")
 			}
 			elementName := element.Value.(string)
 			elementNameStack.Remove(element)

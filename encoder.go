@@ -5,7 +5,6 @@ package binaryxml
 import (
 	"encoding/binary"
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"io"
 	"github.com/cevaris/ordered_map"
@@ -20,13 +19,13 @@ type BinaryXMLEncoder struct {
 
 func (encoder *BinaryXMLEncoder) Encode(v interface{}) error {
 	table := ordered_map.NewOrderedMap()
-	if err := encoder.populateTable(reflect.ValueOf(v), nil, table); err != nil {return err}
+	if err := encoder.populateTable(reflect.ValueOf(v), table); err != nil {return err}
 	if err := encoder.writeTable(table); err != nil {return err}
 	return encoder.writeSerial(reflect.ValueOf(v), nil, table)
 }
 
 
-func (encoder *BinaryXMLEncoder) populateTable(value reflect.Value, fieldInfo *fieldInfo, table *ordered_map.OrderedMap) error {
+func (encoder *BinaryXMLEncoder) populateTable(value reflect.Value, table *ordered_map.OrderedMap) error {
 	if !value.IsValid() {return nil}
 	
 	// Drill into interfaces and pointers
@@ -41,16 +40,22 @@ func (encoder *BinaryXMLEncoder) populateTable(value reflect.Value, fieldInfo *f
 	// Attributes
 	for i := range typeInfo.fields {
 		fieldInfo := &typeInfo.fields[i]
-		fv := fieldInfo.value(value)
-		if fieldInfo.flags&fOmitEmpty != 0 && isEmptyValue(fv) {continue}
-		if fv.Kind() == reflect.Interface && fv.IsNil() {continue}
+		fieldValue := fieldInfo.value(value)
+		if fieldInfo.flags&fOmitEmpty != 0 && isEmptyValue(fieldValue) {continue}
+		if fieldValue.Kind() == reflect.Interface && fieldValue.IsNil() {continue}
 		if elementNumber, ok := table.Get(fieldInfo.name); !ok {
 			elementNumber = table.Len() +1
 			table.Set(fieldInfo.name, elementNumber)
 		}
 		// Drill into nested structs
-		if fv.Kind() == reflect.Struct {
-			encoder.populateTable(fv, fieldInfo, table)
+		if fieldValue.Kind() == reflect.Struct {
+			encoder.populateTable(fieldValue, table)
+		}
+		// Drill into nested slices
+		if fieldValue.Kind() == reflect.Slice {
+			for i, n := 0, fieldValue.Len(); i < n; i++ {
+				if err := encoder.populateTable(fieldValue.Index(i), table); err != nil {return err}
+			}
 		}
 	}
 	
@@ -84,6 +89,7 @@ func (encoder *BinaryXMLEncoder) marshalValue(value reflect.Value, fieldInfo *fi
 		if value.IsNil() {return nil}
 		value = value.Elem()
 	}
+	
 	kind := value.Kind()
 	type_ := value.Type()
 	
@@ -185,7 +191,7 @@ func (encoder *BinaryXMLEncoder) marshalAttr(start *xml.StartElement, name xml.N
 	if x, ok := table.Get(name.Local); ok {
 		elementNumber = uint16(x.(int))
 	} else {
-		return errors.New("Content is not valid binary XML")
+		return fmt.Errorf("No table entry for element %s", name.Local)
 	}
 	
 	switch value.Kind() {
@@ -235,8 +241,14 @@ func (encoder *BinaryXMLEncoder) marshalAttr(start *xml.StartElement, name xml.N
 			binary.Write(writer, binary.BigEndian, elementNumber)
 			binary.Write(writer, binary.BigEndian, value.Uint())
 			binary.Write(writer, binary.BigEndian, endtagtype)
+		case reflect.Slice:
+			// Walk slices
+			for i, n := 0, value.Len(); i < n; i++ {
+				var startElement xml.StartElement
+				startElement.Name.Local = fieldInfo.name
+				if err := encoder.marshalValue(value.Index(i), fieldInfo, table, &startElement); err != nil {return err}
+			}
 		case reflect.Struct:
-			// func (encoder *BinaryXMLEncoder) marshalValue(value reflect.Value, fieldInfo *fieldInfo, table *ordered_map.OrderedMap) error {
 			var startElement xml.StartElement
 			startElement.Name.Local = fieldInfo.name
 			if err := encoder.marshalValue(value, fieldInfo, table, &startElement); err != nil {return err}
