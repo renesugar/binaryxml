@@ -49,6 +49,45 @@ type Fixture2_Query struct {
 }
 
 
+type Fixture3 struct {
+	XMLName   struct{}           `xml:"DataPluginDefinition"`
+	Namespace Fixture3_Namespace `xml:"Namespace"`
+}
+
+
+type Fixture3_Namespace struct {
+	XMLName struct{}        `xml:"Namespace"`
+	Name    string          `xml:"name"`
+	Display string          `xml:"display"`
+	Version string          `xml:"version"`
+	Schema  Fixture3_Schema `xml:"Schema"`
+}
+
+
+type Fixture3_Schema struct {
+	XMLName  struct{}          `xml:"Schema"`
+	Name     string            `xml:"name"`
+	Instance Fixture3_Instance `xml:"Instance"`
+	Fields   []Fixture3_Field  `xml:"Field"`
+}
+
+
+type Fixture3_Instance struct {
+	XMLName struct{} `xml:"Instance"`
+	Name    string   `xml:"name"`
+	Display string   `xml:"display"`
+}
+
+
+type Fixture3_Field struct {
+	XMLName  struct{} `xml:"Field"`
+	Name     string   `xml:"name"`
+	Type     string   `xml:"type"`
+	Display  string   `xml:"display"`
+	UserData string   `xml:"userdata"`
+}
+
+
 type Fixture4 struct {
 	XMLName   struct{} `xml:"TestDoc"`
 	Int8Min   int8     `xml:"int8_min"`
@@ -73,12 +112,12 @@ func TestEncodeFixture1(t *testing.T) {
 	fixture := "testdata/test-systemlib-1.xml"
 	fmt.Printf("Loading fixture %s\n", fixture)
 	xmlBytes, err := ioutil.ReadFile(fixture)
-	if err != nil {t.Errorf("Failed opening test fixture %s", fixture)}
+	assert.Nil(err)
 	
 	// Unmarshal XML file into Fixture1 structure
 	fixture1 := Fixture1{}
 	err = xml.Unmarshal(xmlBytes, &fixture1)
-	if err != nil {t.Errorf("Failed unmarshalling test fixture #1 into structure: %v", err)}
+	assert.Nil(err)
 	
 	// Sanity check - ensure fixture1 contains expected values loaded from file, before starting test
 	assert.Equal("VirtualMachines", fixture1.ToNamespace)
@@ -90,17 +129,17 @@ func TestEncodeFixture1(t *testing.T) {
 	file, _ := ioutil.TempFile("", "binaryxmlEncoderTest1")
 	writer := bufio.NewWriter(file)
 	fmt.Printf("Writing binary encoded xml file %s\n", file.Name())
-	if err := binaryxml.Encode(fixture1, writer); err != nil {t.Errorf("Failed encoding object as binary xml %+v", err)}
+	if err := binaryxml.Encode(fixture1, writer); err != nil {assert.Nil(err)}
 	writer.Flush()
 	
 	// Unmarshal binary XML file into 2nd Fixture1 structure
 	binaryXmlBytes, err := ioutil.ReadFile(file.Name())
-	if err != nil {t.Errorf("Failed opening generated binary xml file %s", file.Name)}
+	assert.Nil(err)
 	xmlString, err := binaryxml.Decode(binaryXmlBytes)
-	if err != nil {t.Errorf("Failed decoding binary xml %+v", err)}	
+	assert.Nil(err)	
 	secondFixture1 := Fixture1{}
 	err = xml.Unmarshal([]byte(xmlString), &secondFixture1)
-	if err != nil {t.Errorf("Failed unmarshalling test fixture #1 into structure: %v", err)}
+	assert.Nil(err)
 	
 	// Perform test
 	assert.Equal(fixture1, secondFixture1)
@@ -110,16 +149,16 @@ func TestEncodeFixture1(t *testing.T) {
 func TestEncodeFixture2(t *testing.T) {
 	assert := assert.New(t)
 	
-	// Read XML fixture #1
+	// Read XML fixture #2
 	fixture := "testdata/test-systemlib-2.xml"
 	fmt.Printf("Loading fixture %s\n", fixture)
 	xmlBytes, err := ioutil.ReadFile(fixture)
-	if err != nil {t.Errorf("Failed opening test fixture %s", fixture)}
+	assert.Nil(err)
 	
 	// Unmarshal XML file into Fixture2 structure
 	fixture2 := Fixture2{}
 	err = xml.Unmarshal(xmlBytes, &fixture2)
-	if err != nil {t.Errorf("Failed unmarshalling test fixture #2 into structure: %v", err)}
+	assert.Nil(err)
 	
 	// Sanity check - ensure fixture2 contains expected values loaded from file, before starting test
 	assert.Equal("SubscriptionProvider", fixture2.ToNamespace)
@@ -139,20 +178,67 @@ func TestEncodeFixture2(t *testing.T) {
 	file, _ := ioutil.TempFile("", "binaryxmlEncoderTest2")
 	writer := bufio.NewWriter(file)
 	fmt.Printf("Writing binary encoded xml file %s\n", file.Name())
-	if err := binaryxml.Encode(fixture2, writer); err != nil {t.Errorf("Failed encoding object as binary xml %+v", err)}
+	if err := binaryxml.Encode(fixture2, writer); err != nil {assert.Nil(err)}
 	writer.Flush()
 	
 	// Unmarshal binary XML file into 2nd Fixture2 structure
 	binaryXmlBytes, err := ioutil.ReadFile(file.Name())
-	if err != nil {t.Errorf("Failed opening generated binary xml file %s", file.Name)}
+	assert.Nil(err)
 	xmlString, err := binaryxml.Decode(binaryXmlBytes)
-	if err != nil {t.Errorf("Failed decoding binary xml %+v", err)}	
+	assert.Nil(err)	
 	secondFixture2 := Fixture2{}
 	err = xml.Unmarshal([]byte(xmlString), &secondFixture2)
-	if err != nil {t.Errorf("Failed unmarshalling test fixture #2 into structure: %v", err)}
+	assert.Nil(err)
 	
 	// Perform test
 	assert.Equal(fixture2, secondFixture2)
+}
+
+	
+func TestEncodeFixture3(t *testing.T) {
+	assert := assert.New(t)
+	
+	// Read XML fixture #3
+	fixture := "testdata/test-systemlib-3.xml"
+	fmt.Printf("Loading fixture %s\n", fixture)
+	xmlBytes, err := ioutil.ReadFile(fixture)
+	assert.Nil(err)
+	
+	// Unmarshal XML file into Fixture2 structure
+	fixture3 := Fixture3{}
+	err = xml.Unmarshal(xmlBytes, &fixture3)
+	assert.Nil(err)
+	
+	// Sanity check - ensure fixture3 contains expected values loaded from file, before starting test
+	assert.Equal("Waveforms", fixture3.Namespace.Name)
+	assert.Equal("Waveforms", fixture3.Namespace.Display)
+	assert.Equal("1", fixture3.Namespace.Version)
+	assert.Equal("schema", fixture3.Namespace.Schema.Name)
+	assert.Equal("default", fixture3.Namespace.Schema.Instance.Name)
+	assert.Equal("default", fixture3.Namespace.Schema.Instance.Display)
+	field := Fixture3_Field{Name:"sinewave", Type:"schema_uint32", Display:"sinewave", UserData:"Custom field"}
+	assert.Contains(fixture3.Namespace.Schema.Fields, field)
+	field = Fixture3_Field{Name:"random", Type:"schema_uint32", Display:"random", UserData:"Custom field"}
+	assert.Contains(fixture3.Namespace.Schema.Fields, field)
+	
+	// Encode structure as binary xml
+	file, _ := ioutil.TempFile("", "binaryxmlEncoderTest3")
+	writer := bufio.NewWriter(file)
+	fmt.Printf("Writing binary encoded xml file %s\n", file.Name())
+	if err := binaryxml.Encode(fixture3, writer); err != nil {t.Errorf("Failed encoding object as binary xml %+v", err)}
+	writer.Flush()
+	
+	// Unmarshal binary XML file into 2nd Fixture3 structure
+	binaryXmlBytes, err := ioutil.ReadFile(file.Name())
+	if err != nil {t.Errorf("Failed opening generated binary xml file %s", file.Name)}
+	xmlString, err := binaryxml.Decode(binaryXmlBytes)
+	if err != nil {t.Errorf("Failed decoding binary xml %+v", err)}	
+	secondFixture3 := Fixture3{}
+	err = xml.Unmarshal([]byte(xmlString), &secondFixture3)
+	assert.Nil(err)
+	
+	// Perform test
+	assert.Equal(fixture3, secondFixture3)
 }
 
 	
@@ -163,12 +249,12 @@ func TestEncodeFixture4(t *testing.T) {
 	fixture := "testdata/test-systemlib-4.xml"
 	fmt.Printf("Loading fixture %s\n", fixture)
 	xmlBytes, err := ioutil.ReadFile(fixture)
-	if err != nil {t.Errorf("Failed opening test fixture %s", fixture)}
+	assert.Nil(err)
 	
 	// Unmarshal XML file into Fixture4 structure
 	fixture4 := Fixture4{}
 	err = xml.Unmarshal(xmlBytes, &fixture4)
-	if err != nil {t.Errorf("Failed unmarshalling test fixture #4 into structure: %v", err)}
+	assert.Nil(err)
 	
 	// Sanity check - ensure fixture4 contains expected values loaded from file, before starting test
 	assert.Equal(int8(-128), fixture4.Int8Min)
@@ -188,17 +274,17 @@ func TestEncodeFixture4(t *testing.T) {
 	file, _ := ioutil.TempFile("", "binaryxmlEncoderTest4")
 	writer := bufio.NewWriter(file)
 	fmt.Printf("Writing binary encoded xml file %s\n", file.Name())
-	if err := binaryxml.Encode(fixture4, writer); err != nil {t.Errorf("Failed encoding object as binary xml %+v", err)}
+	if err := binaryxml.Encode(fixture4, writer); err != nil {assert.Nil(err)}
 	writer.Flush()
 	
 	// Unmarshal binary XML file into 2nd Fixture4 structure
 	binaryXmlBytes, err := ioutil.ReadFile(file.Name())
-	if err != nil {t.Errorf("Failed opening generated binary xml file %s", file.Name)}
+	assert.Nil(err)
 	xmlString, err := binaryxml.Decode(binaryXmlBytes)
-	if err != nil {t.Errorf("Failed decoding binary xml %+v", err)}	
+	assert.Nil(err)	
 	secondFixture4 := Fixture4{}
 	err = xml.Unmarshal([]byte(xmlString), &secondFixture4)
-	if err != nil {t.Errorf("Failed unmarshalling test fixture #4 into structure: %v", err)}
+	assert.Nil(err)
 	
 	// Perform test
 	assert.Equal(fixture4, secondFixture4)
