@@ -247,11 +247,18 @@ func (encoder *BinaryXMLEncoder) marshalAttr(start *xml.StartElement, name xml.N
 			binary.Write(writer, binary.BigEndian, value.Uint())
 			binary.Write(writer, binary.BigEndian, endtagtype)
 		case reflect.Slice:
-			// Walk slices
-			for i, n := 0, value.Len(); i < n; i++ {
-				var startElement xml.StartElement
-				startElement.Name.Local = fieldInfo.name
-				if err := encoder.marshalValue(value.Index(i), fieldInfo, table, &startElement); err != nil {return err}
+			if value.Type().Elem().Kind() == reflect.Uint8 { // binary
+				binary.Write(writer, binary.BigEndian, binarytype)
+				binary.Write(writer, binary.BigEndian, elementNumber)
+				binary.Write(writer, binary.BigEndian, uint32(value.Len()))
+				binary.Write(writer, binary.BigEndian, value.Bytes())
+				binary.Write(writer, binary.BigEndian, endtagtype)
+			} else { // Walk slices of nested elements
+				for i, n := 0, value.Len(); i < n; i++ {
+					var startElement xml.StartElement
+					startElement.Name.Local = fieldInfo.name
+					if err := encoder.marshalValue(value.Index(i), fieldInfo, table, &startElement); err != nil {return err}
+				}
 			}
 		case reflect.Struct:
 			var startElement xml.StartElement

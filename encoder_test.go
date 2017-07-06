@@ -103,13 +103,19 @@ type Fixture4 struct {
 	Uint32Max uint32   `xml:"uint32_max"`
 	Uint64Max uint64   `xml:"uint64_max"`
 }
-	
+
 
 type Fixture5 struct {
 	XMLName            struct{} `xml:"TestDoc"`
 	Float32_0          float32  `xml:"float32_0"`
 	Float32_Pi         float32  `xml:"float32_pi"`
 	Float32_NegativePi float32  `xml:"float32_negativepi"`
+}
+
+
+type Fixture6 struct {
+	XMLName         struct{} `xml:"TestDoc"`
+	Binary_007f80ff []byte   `xml:"binary_007f80ff"`
 }
 
 
@@ -337,4 +343,28 @@ func TestEncodeFixture5(t *testing.T) {
 	
 	// Perform test
 	assert.Equal(fixture5, secondFixture5)
+}
+
+	
+func TestEncodeFixture6(t *testing.T) {
+	assert := assert.New(t)
+	
+	// Statically prepare Fixture6 structure, and sanity check
+	fixture6 := Fixture6{Binary_007f80ff: []byte{0x00, 0x7f, 0x80, 0xff}}
+	
+	// Encode structure as binary xml
+	file, _ := ioutil.TempFile("", "binaryxmlEncoderTest6")
+	writer := bufio.NewWriter(file)
+	fmt.Printf("Writing binary encoded xml file %s\n", file.Name())
+	if err := binaryxml.Encode(fixture6, writer); err != nil {assert.Nil(err)}
+	writer.Flush()
+	
+	// Load binary xml files and compare (they're single-field so exact matching can be used)
+	expectedBinaryXmlBytes, err := ioutil.ReadFile("testdata/test-systemlib-6.binaryxml")
+	assert.Nil(err)
+	actualBinaryXmlBytes, err := ioutil.ReadFile(file.Name())
+	assert.Nil(err)
+	
+	// Perform test
+	assert.Equal(expectedBinaryXmlBytes, actualBinaryXmlBytes)
 }
