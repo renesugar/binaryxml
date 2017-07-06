@@ -149,7 +149,7 @@ func TestEncodeFixture1(t *testing.T) {
 	// Unmarshal binary XML file into 2nd Fixture1 structure
 	binaryXmlBytes, err := ioutil.ReadFile(file.Name())
 	assert.Nil(err)
-	xmlString, err := binaryxml.Decode(binaryXmlBytes)
+	xmlString, err := binaryxml.ToXML(binaryXmlBytes)
 	assert.Nil(err)	
 	secondFixture1 := Fixture1{}
 	err = xml.Unmarshal([]byte(xmlString), &secondFixture1)
@@ -198,7 +198,7 @@ func TestEncodeFixture2(t *testing.T) {
 	// Unmarshal binary XML file into 2nd Fixture2 structure
 	binaryXmlBytes, err := ioutil.ReadFile(file.Name())
 	assert.Nil(err)
-	xmlString, err := binaryxml.Decode(binaryXmlBytes)
+	xmlString, err := binaryxml.ToXML(binaryXmlBytes)
 	assert.Nil(err)	
 	secondFixture2 := Fixture2{}
 	err = xml.Unmarshal([]byte(xmlString), &secondFixture2)
@@ -246,7 +246,7 @@ func TestEncodeFixture3(t *testing.T) {
 	// Unmarshal binary XML file into 2nd Fixture3 structure
 	binaryXmlBytes, err := ioutil.ReadFile(file.Name())
 	if err != nil {t.Errorf("Failed opening generated binary xml file %s", file.Name)}
-	xmlString, err := binaryxml.Decode(binaryXmlBytes)
+	xmlString, err := binaryxml.ToXML(binaryXmlBytes)
 	if err != nil {t.Errorf("Failed decoding binary xml %+v", err)}
 	secondFixture3 := Fixture3{}
 	err = xml.Unmarshal([]byte(xmlString), &secondFixture3)
@@ -295,7 +295,7 @@ func TestEncodeFixture4(t *testing.T) {
 	// Unmarshal binary XML file into 2nd Fixture4 structure
 	binaryXmlBytes, err := ioutil.ReadFile(file.Name())
 	assert.Nil(err)
-	xmlString, err := binaryxml.Decode(binaryXmlBytes)
+	xmlString, err := binaryxml.ToXML(binaryXmlBytes)
 	assert.Nil(err)	
 	secondFixture4 := Fixture4{}
 	err = xml.Unmarshal([]byte(xmlString), &secondFixture4)
@@ -335,7 +335,7 @@ func TestEncodeFixture5(t *testing.T) {
 	// Unmarshal binary XML file into 2nd Fixture5 structure
 	binaryXmlBytes, err := ioutil.ReadFile(file.Name())
 	assert.Nil(err)
-	xmlString, err := binaryxml.Decode(binaryXmlBytes)
+	xmlString, err := binaryxml.ToXML(binaryXmlBytes)
 	assert.Nil(err)	
 	secondFixture5 := Fixture5{}
 	err = xml.Unmarshal([]byte(xmlString), &secondFixture5)

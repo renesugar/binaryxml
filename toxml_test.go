@@ -10,32 +10,32 @@ import (
 )
 
 
-func TestDecodeBinaryFixture1(t *testing.T) {
-	doDecodeTest("test-systemlib-1", t)
+func TestToXMLWithBinaryFixture1(t *testing.T) {
+	doToXMLTest("test-systemlib-1", t)
 }
 
-func TestDecodeBinaryFixture2(t *testing.T) {
-	doDecodeTest("test-systemlib-2", t)
+func TestToXMLWithBinaryFixture2(t *testing.T) {
+	doToXMLTest("test-systemlib-2", t)
 }
 
-func TestDecodeBinaryFixture3(t *testing.T) {
-	doDecodeTest("test-systemlib-3", t)
+func TestToXMLWithBinaryFixture3(t *testing.T) {
+	doToXMLTest("test-systemlib-3", t)
 }
 
-func TestDecodeBinaryFixture4(t *testing.T) {
-	doDecodeTest("test-systemlib-4", t)
+func TestToXMLWithBinaryFixture4(t *testing.T) {
+	doToXMLTest("test-systemlib-4", t)
 }
 
-func TestDecodeBinaryFixture5(t *testing.T) {
-	doDecodeTest("test-systemlib-5", t)
+func TestToXMLWithBinaryFixture5(t *testing.T) {
+	doToXMLTest("test-systemlib-5", t)
 }
 
-func TestDecodeBinaryFixture6(t *testing.T) {
-	doDecodeTest("test-systemlib-6", t)
+func TestToXMLWithBinaryFixture6(t *testing.T) {
+	doToXMLTest("test-systemlib-6", t)
 }
 
 
-func doDecodeTest(fixtureName string, t *testing.T) {
+func doToXMLTest(fixtureName string, t *testing.T) {
 	// Configure XML minifier, and use during comparisons to minimize superficial differences
 	minifier := minify.New()
 	minifier.AddFunc("text/xml", xml.Minify) 
@@ -55,7 +55,7 @@ func doDecodeTest(fixtureName string, t *testing.T) {
 	expectedXml := string(expectedXmlBinary)
 	
 	// Decode binary xml
-	xml, err := binaryxml.Decode(binaryXml)
+	xml, err := binaryxml.ToXML(binaryXml)
 	if err != nil {
 		t.Errorf("Failed decoding binary xml %+v", err)
 	}

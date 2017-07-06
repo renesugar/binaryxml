@@ -12,7 +12,7 @@ import (
 const malformedErrorStr = "Content is not valid binary XML; %s"
 
 
-func Decode(data []byte) (string, error) {
+func ToXML(data []byte) (string, error) {
 	reader := bytes.NewReader(data)
 	
 	// Read table begin marker
