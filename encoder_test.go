@@ -89,6 +89,7 @@ func TestEncodeFixture1(t *testing.T) {
 	// Encode structure as binary xml
 	file, _ := ioutil.TempFile("", "binaryxmlEncoderTest1")
 	writer := bufio.NewWriter(file)
+	fmt.Printf("Writing binary encoded xml file %s\n", file.Name())
 	if err := binaryxml.Encode(fixture1, writer); err != nil {t.Errorf("Failed encoding object as binary xml %+v", err)}
 	writer.Flush()
 	
@@ -137,6 +138,7 @@ func TestEncodeFixture2(t *testing.T) {
 	// Encode structure as binary xml
 	file, _ := ioutil.TempFile("", "binaryxmlEncoderTest2")
 	writer := bufio.NewWriter(file)
+	fmt.Printf("Writing binary encoded xml file %s\n", file.Name())
 	if err := binaryxml.Encode(fixture2, writer); err != nil {t.Errorf("Failed encoding object as binary xml %+v", err)}
 	writer.Flush()
 	
