@@ -195,11 +195,10 @@ func (encoder *BinaryXMLEncoder) marshalAttr(start *xml.StartElement, name xml.N
 	}
 	
 	switch value.Kind() {
-		case reflect.String:
-			binary.Write(writer, binary.BigEndian, strtype)
+		case reflect.Float32:
+			binary.Write(writer, binary.BigEndian, float4type)
 			binary.Write(writer, binary.BigEndian, elementNumber)
-			writer.Write([]byte(value.String()))
-			writer.Write([]byte("\x00"))
+			binary.Write(writer, binary.BigEndian, float32(value.Float()))
 			binary.Write(writer, binary.BigEndian, endtagtype)
 		case reflect.Int8:
 			binary.Write(writer, binary.BigEndian, int1btype)
@@ -235,6 +234,12 @@ func (encoder *BinaryXMLEncoder) marshalAttr(start *xml.StartElement, name xml.N
 			binary.Write(writer, binary.BigEndian, uint4btype)
 			binary.Write(writer, binary.BigEndian, elementNumber)
 			binary.Write(writer, binary.BigEndian, uint32(value.Uint()))
+			binary.Write(writer, binary.BigEndian, endtagtype)
+		case reflect.String:
+			binary.Write(writer, binary.BigEndian, strtype)
+			binary.Write(writer, binary.BigEndian, elementNumber)
+			writer.Write([]byte(value.String()))
+			writer.Write([]byte("\x00"))
 			binary.Write(writer, binary.BigEndian, endtagtype)
 		case reflect.Uint64:
 			binary.Write(writer, binary.BigEndian, uint8btype)

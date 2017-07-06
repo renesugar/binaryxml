@@ -105,6 +105,14 @@ type Fixture4 struct {
 }
 	
 
+type Fixture5 struct {
+	XMLName            struct{} `xml:"TestDoc"`
+	Float32_0          float32  `xml:"float32_0"`
+	Float32_Pi         float32  `xml:"float32_pi"`
+	Float32_NegativePi float32  `xml:"float32_negativepi"`
+}
+
+
 func TestEncodeFixture1(t *testing.T) {
 	assert := assert.New(t)
 	
@@ -289,4 +297,44 @@ func TestEncodeFixture4(t *testing.T) {
 	
 	// Perform test
 	assert.Equal(fixture4, secondFixture4)
+}
+
+	
+func TestEncodeFixture5(t *testing.T) {
+	assert := assert.New(t)
+	
+	// Read XML fixture #5
+	fixture := "testdata/test-systemlib-5.xml"
+	fmt.Printf("Loading fixture %s\n", fixture)
+	xmlBytes, err := ioutil.ReadFile(fixture)
+	assert.Nil(err)
+	
+	// Unmarshal XML file into Fixture5 structure
+	fixture5 := Fixture5{}
+	err = xml.Unmarshal(xmlBytes, &fixture5)
+	assert.Nil(err)
+	
+	// Sanity check - ensure fixture5 contains expected values loaded from file, before starting test
+	assert.Equal(float32(0), fixture5.Float32_0)
+	assert.Equal(float32(3.14), fixture5.Float32_Pi)
+	assert.Equal(float32(-3.14), fixture5.Float32_NegativePi)
+	
+	// Encode structure as binary xml
+	file, _ := ioutil.TempFile("", "binaryxmlEncoderTest5")
+	writer := bufio.NewWriter(file)
+	fmt.Printf("Writing binary encoded xml file %s\n", file.Name())
+	if err := binaryxml.Encode(fixture5, writer); err != nil {assert.Nil(err)}
+	writer.Flush()
+	
+	// Unmarshal binary XML file into 2nd Fixture5 structure
+	binaryXmlBytes, err := ioutil.ReadFile(file.Name())
+	assert.Nil(err)
+	xmlString, err := binaryxml.Decode(binaryXmlBytes)
+	assert.Nil(err)	
+	secondFixture5 := Fixture5{}
+	err = xml.Unmarshal([]byte(xmlString), &secondFixture5)
+	assert.Nil(err)
+	
+	// Perform test
+	assert.Equal(fixture5, secondFixture5)
 }
