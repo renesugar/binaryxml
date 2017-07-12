@@ -17,6 +17,11 @@ type BinaryXMLEncoder struct {
 }
 
 
+func NewEncoder(writer io.Writer) *BinaryXMLEncoder {
+	return &BinaryXMLEncoder{writer:writer}
+}
+
+
 func (encoder *BinaryXMLEncoder) Encode(v interface{}) error {
 	table := ordered_map.NewOrderedMap()
 	if err := encoder.populateTable(reflect.ValueOf(v), table); err != nil {return err}
