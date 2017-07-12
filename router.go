@@ -24,8 +24,8 @@ func NewRequest(binaryXml []byte) (*Request, error) {
 	if err != nil {return nil, err}
 	
 	// Parse XML for future xpath queries
-    xmlQueryNode, err := xmlquery.Parse(strings.NewReader(xml))
-    if err != nil {return nil, err}
+	xmlQueryNode, err := xmlquery.Parse(strings.NewReader(xml))
+	if err != nil {return nil, err}
 	
 	request := Request{BinaryXML:binaryXml, XML:xml, XMLQueryNode:xmlQueryNode}
 	return &request, nil
@@ -59,7 +59,7 @@ func NewContext(request *Request) *Context {
 // Router route handler
 //=======================================================================
 
-type HandlerFunc func(Context) error
+type HandlerFunc func(*Context) error
 
 
 //=======================================================================
@@ -75,6 +75,8 @@ type Router interface {
 	
 	// Find a handler function to match the given request
 	findHandler(ctx *Context) HandlerFunc
+	
+	Handle(ctx *Context)
 }
 
 
@@ -107,4 +109,12 @@ func (router *routerImpl) findHandler(ctx *Context) HandlerFunc {
     	}
 	}
 	return router.defaultHandler
+}
+
+
+func (router *routerImpl) Handle(ctx *Context) error {
+	handler := router.findHandler(ctx)
+	if handler == nil {return nil}
+	err := handler(ctx)
+	return err
 }

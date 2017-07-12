@@ -13,7 +13,7 @@ func TestRegisterRoutes(t *testing.T) {
 	router := NewRouter()
 	assert.NotNil(router)
 	
-	router.Add("/BixRequest[toNamespace='VirtualMachines'][request='Testing']", func(ctx Context) error {
+	router.Add("/BixRequest[toNamespace='VirtualMachines'][request='Testing']", func(*Context) error {
 		return nil
 	})
 	binaryXml, err := ioutil.ReadFile("testdata/test-systemlib-1.binaryxml")
@@ -32,7 +32,7 @@ func TestRouteFixture1(t *testing.T) {
 	assert.NotNil(router)
 	
 	handlerCalled := false
-	router.Add("/BixRequest[toNamespace='VirtualMachines'][request='Testing']", func(ctx Context) error {
+	router.Add("/BixRequest[toNamespace='VirtualMachines'][request='Testing']", func(*Context) error {
 		handlerCalled = true
 		return nil
 	})
@@ -40,8 +40,7 @@ func TestRouteFixture1(t *testing.T) {
 	assert.Nil(err)
 	request, err := NewRequest(binaryXml)
 	ctx := NewContext(request)
-	handler := router.findHandler(ctx)
-	assert.NotNil(handler)
 	
-	//assert.Equal(true, handlerCalled)
+	router.Handle(ctx)
+	assert.Equal(true, handlerCalled)
 }
