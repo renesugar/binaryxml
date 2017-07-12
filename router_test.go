@@ -32,7 +32,8 @@ func TestRouteFixture1(t *testing.T) {
 	assert.NotNil(router)
 	
 	handlerCalled := false
-	router.Add("/BixRequest[toNamespace='VirtualMachines'][request='Testing']", func(*Context) error {
+	router.Add("/BixRequest[toNamespace='VirtualMachines'][request='Testing']", func(ctx *Context) error {
+		ctx.Response.BinaryXML = []byte{byte(tablebegin), byte(tableend), byte(serialbegin), byte(serialend)}
 		handlerCalled = true
 		return nil
 	})
@@ -43,4 +44,5 @@ func TestRouteFixture1(t *testing.T) {
 	
 	router.Handle(ctx)
 	assert.Equal(true, handlerCalled)
+	assert.Equal(4, len(ctx.Response.BinaryXML))
 }

@@ -37,6 +37,7 @@ func NewRequest(binaryXml []byte) (*Request, error) {
 //=======================================================================
 
 type Response struct {
+	BinaryXML []byte
 }
 
 
@@ -51,7 +52,8 @@ type Context struct {
 
 
 func NewContext(request *Request) *Context {
-	return &Context{Request:request}
+	response := &Response{}
+	return &Context{Request:request, Response:response}
 }
 
 
