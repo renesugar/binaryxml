@@ -41,6 +41,39 @@ err := binaryxml.Encode(person, writer);
 writer.Flush()
 ```
 
+### Routing requests
+
+```go
+router := binaryxml.NewRouter()
+router.Add("/BixRequest[toNamespace='SubscriptionManager'][request='Subscribe']", onSubscribeRequest)
+router.Add("/BixRequest[toNamespace='_internal']", onInternalRequest)
+
+func onInternalRequest(ctx *Context) error {
+	type bixResponse struct {
+		XMLName     struct{} `xml:"BixResponse"`
+		Request     string   `xml:"request"`
+		ToNamespace string   `xml:"toNamespace"`
+		MOID        string   `xml:"moid"`
+		MID         string   `xml:"mid"`
+	}
+	ctx.Response.BinaryXML = []byte{byte(tablebegin), byte(tableend), byte(serialbegin), byte(serialend)}
+	return nil
+})
+
+listener, err := net.Listen("tcp", 17070)
+conn, err := listener.Accept()
+reader := bufio.NewReader(conn)
+buffer := make([]byte, 100000)
+for {
+	readBytes, err := reader.Read(buffer)
+	binaryXml := buf[:readBytes]
+	request, err := binaryxml.NewRequest(binaryXml)
+	ctx := binaryxml.NewContext(request)
+	router.Handle(ctx)
+	conn.Write(ctx.Response.BinaryXML)
+}
+```
+
 ## Testing
 
 Setup a workspace:
