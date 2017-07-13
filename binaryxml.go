@@ -1,7 +1,6 @@
 package binaryxml
 
 import (
-	"io"
 )
 
 type BinXMLType uint8
@@ -26,8 +25,3 @@ const (
 	serialbegin BinXMLType = 126
 	serialend   BinXMLType = 127
 )
-
-
-func NewEncoder(writer io.Writer) *BinaryXMLEncoder {
-	return &BinaryXMLEncoder{writer:writer}
-}

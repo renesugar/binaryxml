@@ -41,6 +41,56 @@ err := binaryxml.Encode(person, writer);
 writer.Flush()
 ```
 
+### Routing requests
+
+```go
+router := binaryxml.NewRouter()
+router.Add("/BixRequest[toNamespace='SubscriptionManager'][request='Subscribe']", handleSubscribeRequest)
+router.Add("/BixRequest[toNamespace='_internal'][request='_GETAUTH']", handleInternalGetAuthRequest)
+
+func handleInternalGetAuthRequest(ctx *Context) error {
+	// Prepare response object
+	type bixResponse struct {
+		XMLName       struct{}        `xml:"BixResponse"`
+		FromNamespace string          `xml:"fromNamespace"`
+		Request       string          `xml:"request"`
+		MOID          string          `xml:"moid"`
+		MID           string          `xml:"mid"`
+		Data          bixResponseData `xml:"Data"`
+	}
+	type bixResponseData struct {
+		XMLName struct{} `xml:"BixResponse"`
+		Auth    bool     `xml:"auth"`
+	}
+	bixRes := bixResponse{FromNamespace:"_internal", Request:'_GETAUTH'}
+	bixRes.Data.Auth = false
+
+	// Serialize response object to binaryxml
+	var b bytes.Buffer
+	writer := bufio.NewWriter(&b)
+	err := binaryxml.Encode(bixRes, writer)
+	writer.Flush()
+	binaryXML := b.Bytes()
+
+	// Send response
+	ctx.Response.BinaryXML = binaryXML
+	return nil
+})
+
+listener, err := net.Listen("tcp", 17070)
+conn, err := listener.Accept()
+reader := bufio.NewReader(conn)
+buffer := make([]byte, 100000)
+for {
+	readBytes, err := reader.Read(buffer)
+	binaryXml := buf[:readBytes]
+	request, err := binaryxml.NewRequest(binaryXml)
+	ctx := binaryxml.NewContext(request)
+	router.Handle(ctx)
+	conn.Write(ctx.Response.BinaryXML)
+}
+```
+
 ## Testing
 
 Setup a workspace:
