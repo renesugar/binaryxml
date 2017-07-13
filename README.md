@@ -45,18 +45,35 @@ writer.Flush()
 
 ```go
 router := binaryxml.NewRouter()
-router.Add("/BixRequest[toNamespace='SubscriptionManager'][request='Subscribe']", onSubscribeRequest)
-router.Add("/BixRequest[toNamespace='_internal']", onInternalRequest)
+router.Add("/BixRequest[toNamespace='SubscriptionManager'][request='Subscribe']", handleSubscribeRequest)
+router.Add("/BixRequest[toNamespace='_internal'][request='_GETAUTH']", handleInternalGetAuthRequest)
 
-func onInternalRequest(ctx *Context) error {
+func handleInternalGetAuthRequest(ctx *Context) error {
+	// Prepare response object
 	type bixResponse struct {
-		XMLName     struct{} `xml:"BixResponse"`
-		Request     string   `xml:"request"`
-		ToNamespace string   `xml:"toNamespace"`
-		MOID        string   `xml:"moid"`
-		MID         string   `xml:"mid"`
+		XMLName       struct{}        `xml:"BixResponse"`
+		FromNamespace string          `xml:"fromNamespace"`
+		Request       string          `xml:"request"`
+		MOID          string          `xml:"moid"`
+		MID           string          `xml:"mid"`
+		Data          bixResponseData `xml:"Data"`
 	}
-	ctx.Response.BinaryXML = []byte{byte(tablebegin), byte(tableend), byte(serialbegin), byte(serialend)}
+	type bixResponseData struct {
+		XMLName       struct{} `xml:"BixResponse"`
+		Auth    bool `xml:"auth"`
+	}
+	bixResponse := bixResponse{FromNamespace:"_internal", Request:'_GETAUTH'}
+	bixResponse.Data.Auth = false
+
+	// Serialize response object to binaryxml
+	var b bytes.Buffer
+	writer := bufio.NewWriter(&b)
+	err := binaryxml.Encode(bixResponse, writer)
+	writer.Flush()
+	binaryXML := b.Bytes()
+
+	// Send response
+	ctx.Response.BinaryXML = binaryXML
 	return nil
 })
 
