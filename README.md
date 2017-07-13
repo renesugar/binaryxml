@@ -59,16 +59,16 @@ func handleInternalGetAuthRequest(ctx *Context) error {
 		Data          bixResponseData `xml:"Data"`
 	}
 	type bixResponseData struct {
-		XMLName       struct{} `xml:"BixResponse"`
-		Auth    bool `xml:"auth"`
+		XMLName struct{} `xml:"BixResponse"`
+		Auth    bool     `xml:"auth"`
 	}
-	bixResponse := bixResponse{FromNamespace:"_internal", Request:'_GETAUTH'}
-	bixResponse.Data.Auth = false
+	bixRes := bixResponse{FromNamespace:"_internal", Request:'_GETAUTH'}
+	bixRes.Data.Auth = false
 
 	// Serialize response object to binaryxml
 	var b bytes.Buffer
 	writer := bufio.NewWriter(&b)
-	err := binaryxml.Encode(bixResponse, writer)
+	err := binaryxml.Encode(bixRes, writer)
 	writer.Flush()
 	binaryXML := b.Bytes()
 
