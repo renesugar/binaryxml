@@ -59,7 +59,7 @@ func handleInternalGetAuthRequest(ctx *Context) error {
 		Data          bixResponseData `xml:"Data"`
 	}
 	type bixResponseData struct {
-		XMLName struct{} `xml:"BixResponse"`
+		XMLName struct{} `xml:"Data"`
 		Auth    bool     `xml:"auth"`
 	}
 	bixRes := bixResponse{FromNamespace:"_internal", Request:'_GETAUTH'}
