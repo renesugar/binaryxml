@@ -1,9 +1,9 @@
 package binaryxml
 
-import (
-)
+import ()
 
 type BinXMLType uint8
+
 const (
 	undefinedtype BinXMLType = iota
 	nodetype
@@ -19,9 +19,18 @@ const (
 	strtype
 	binarytype
 	endtagtype
-	
+
 	tablebegin  BinXMLType = 124
 	tableend    BinXMLType = 125
 	serialbegin BinXMLType = 126
 	serialend   BinXMLType = 127
 )
+
+type BixError struct {
+	XMLName       struct{} `xml:"BixError"`
+	FromNamespace string   `xml:"fromNamespace"`
+	Request       string   `xml:"request"`
+	MOID          uint64   `xml:"moid"`
+	MID           uint64   `xml:"mid"`
+	Error         string   `xml:"error"`
+}
