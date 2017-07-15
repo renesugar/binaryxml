@@ -17,6 +17,7 @@ type Request struct {
 	RemoteAddr   string
 	XML          string
 	BinaryXML    []byte
+	Param        uint8
 	XMLQueryNode *xmlquery.Node
 }
 
@@ -61,6 +62,14 @@ func (request *Request) MOID() uint64 {
 	return moid
 }
 
+func (request *Request) Name() string {
+	node := xmlquery.FindOne(request.XMLQueryNode, "/*")
+	if node == nil {
+		return ""
+	}
+	return node.Data
+}
+
 func (request *Request) Request() string {
 	node := xmlquery.FindOne(request.XMLQueryNode, "/BixRequest/request")
 	if node == nil {
@@ -83,6 +92,7 @@ func (request *Request) ToNamespace() string {
 
 type Response struct {
 	BinaryXML []byte
+	Param     uint8
 }
 
 func (response *Response) Encode(v interface{}) error {
