@@ -3,6 +3,9 @@ package binaryxml
 import (
 	"bufio"
 	"bytes"
+	"encoding/binary"
+	"hash/crc32"
+	"io"
 	"strconv"
 	"strings"
 
@@ -109,6 +112,41 @@ func (response *Response) Encode(v interface{}) error {
 func (response *Response) Error(request *Request, message string) error {
 	bixError := BixError{FromNamespace: request.ToNamespace(), Request: request.Request(), MOID: request.MOID(), MID: request.MID(), Error: message}
 	return response.Encode(bixError)
+}
+
+func (response *Response) Write(writer io.Writer) error {
+	// Write message start token
+	if err := binary.Write(writer, binary.BigEndian, msgstate_start); err != nil {
+		return err
+	}
+
+	// Write message length
+	if err := binary.Write(writer, binary.BigEndian, uint32(len(response.BinaryXML))); err != nil {
+		return err
+	}
+
+	// Write param
+	if err := binary.Write(writer, binary.BigEndian, response.Param); err != nil {
+		return err
+	}
+
+	// Write message
+	if _, err := writer.Write(response.BinaryXML); err != nil {
+		return err
+	}
+
+	// Write message end token
+	if err := binary.Write(writer, binary.BigEndian, msgstate_end); err != nil {
+		return err
+	}
+
+	// Write crc32 checksum
+	crc := crc32.ChecksumIEEE(response.BinaryXML)
+	if err := binary.Write(writer, binary.BigEndian, crc); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // ----------------------------------------------------------------------------

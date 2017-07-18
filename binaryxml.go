@@ -20,6 +20,9 @@ const (
 	binarytype
 	endtagtype
 
+	msgstate_start uint8 = 121
+	msgstate_end   uint8 = 123
+
 	tablebegin  BinXMLType = 124
 	tableend    BinXMLType = 125
 	serialbegin BinXMLType = 126
