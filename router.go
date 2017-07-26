@@ -3,10 +3,12 @@ package binaryxml
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/antchfx/xquery/xml"
+	"github.com/docktermj/go-logger/logger"
 )
 
 // ----------------------------------------------------------------------------
@@ -177,9 +179,13 @@ func (router *routerImpl) findHandler(ctx *Context) HandlerFunc {
 
 func (router *routerImpl) Handle(ctx *Context) error {
 	handler := router.findHandler(ctx)
+	topic := fmt.Sprintf("%s %s::%s", ctx.Request.Request(), ctx.Request.ToNamespace(), ctx.Request.Name())
 	if handler == nil {
+		logger.Warnf("No handler for %s", topic)
 		return nil
 	}
+	logger.Infof("Handling %s", topic)
 	err := handler(ctx)
+	logger.Infof("Handling %s done", topic)
 	return err
 }
