@@ -1,10 +1,23 @@
 package binaryxml
 
 import (
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
+	"log"
+	"os"
 	"testing"
+
+	"github.com/docktermj/go-logger/logger"
+	"github.com/stretchr/testify/assert"
 )
+
+// ----------------------------------------------------------------------------
+
+func TestMain(m *testing.M) {
+	log.SetFlags(log.Lshortfile | log.Ldate | log.Lmicroseconds | log.LUTC)
+	logger.SetLevel(logger.LevelInfo)
+
+	os.Exit(m.Run())
+}
 
 // ----------------------------------------------------------------------------
 
@@ -14,7 +27,7 @@ func TestRegisterRoutes(t *testing.T) {
 	router := NewRouter()
 	assert.NotNil(router)
 
-	router.Add("/BixRequest[toNamespace='VirtualMachines'][request='Testing']", func(*Context) error {
+	router.Add("/BixRequest[toNamespace='VirtualMachines' and request='Testing']", func(*Context) error {
 		return nil
 	})
 	binaryXml, err := ioutil.ReadFile("testdata/test-systemlib-1.binaryxml")
@@ -33,24 +46,35 @@ func TestRouteFixture1(t *testing.T) {
 	router := NewRouter()
 	assert.NotNil(router)
 
-	handlerCalled := false
-	router.Add("/BixRequest[toNamespace='VirtualMachines'][request='Testing']", func(ctx *Context) error {
-		ctx.Response.BinaryXML = []byte{byte(tablebegin), byte(tableend), byte(serialbegin), byte(serialend)}
-		handlerCalled = true
+	testingHandlerCalled := false
+	otherHandler1Called := false
+	otherHandler2Called := false
+	router.Add("/BixRequest[toNamespace='VirtualMachines' and request='1']", func(ctx *Context) error {
+		otherHandler1Called = true
+		return nil
+	})
+	router.Add("/BixRequest[toNamespace='VirtualMachines' and request='Testing']", func(ctx *Context) error {
+		testingHandlerCalled = true
+		return nil
+	})
+	router.Add("/BixRequest[toNamespace='VirtualMachines' and request='Z']", func(ctx *Context) error {
+		otherHandler2Called = true
 		return nil
 	})
 	binaryXml, err := ioutil.ReadFile("testdata/test-systemlib-1.binaryxml")
 	assert.NoError(err)
 	request, err := NewRequest(binaryXml)
+	assert.Equal("BixRequest", request.Name())
 	assert.Equal(uint64(6), request.MOID())
 	assert.Equal(uint64(1), request.MID())
+	assert.Equal("VirtualMachines", request.Namespace())
 	assert.Equal("Testing", request.Request())
-	assert.Equal("VirtualMachines", request.ToNamespace())
 	ctx := NewContext(request)
 
 	router.Handle(ctx)
-	assert.Equal(true, handlerCalled)
-	assert.Equal(4, len(ctx.Response.BinaryXML))
+	assert.Equal(true, testingHandlerCalled)
+	assert.Equal(false, otherHandler1Called)
+	assert.Equal(false, otherHandler2Called)
 }
 
 // ----------------------------------------------------------------------------
