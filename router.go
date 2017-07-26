@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/antchfx/xquery/xml"
 	"github.com/docktermj/go-logger/logger"
+	"github.com/jnewmoyer/xmlpath"
 )
 
 // ----------------------------------------------------------------------------
@@ -16,11 +16,11 @@ import (
 // ----------------------------------------------------------------------------
 
 type Request struct {
-	RemoteAddr   string
-	XML          string
-	BinaryXML    []byte
-	Param        uint8
-	XMLQueryNode *xmlquery.Node
+	RemoteAddr  string
+	XML         string
+	BinaryXML   []byte
+	Param       uint8
+	XMLPathNode *xmlpath.Node
 }
 
 func NewRequest(binaryXml []byte) (*Request, error) {
@@ -31,61 +31,59 @@ func NewRequest(binaryXml []byte) (*Request, error) {
 	}
 
 	// Parse XML for future xpath queries
-	xmlQueryNode, err := xmlquery.Parse(strings.NewReader(xml))
+	xmlPathNode, err := xmlpath.Parse(strings.NewReader(xml))
 	if err != nil {
 		return nil, err
 	}
 
-	request := Request{BinaryXML: binaryXml, XML: xml, XMLQueryNode: xmlQueryNode}
+	request := Request{BinaryXML: binaryXml, XML: xml, XMLPathNode: xmlPathNode}
 	return &request, nil
 }
 
 func (request *Request) MID() uint64 {
-	node := xmlquery.FindOne(request.XMLQueryNode, "/BixRequest/mid")
-	if node == nil {
-		return 0
+	path := xmlpath.MustCompile("/BixRequest/mid")
+	if value, ok := path.String(request.XMLPathNode); ok {
+		if mid, err := strconv.ParseUint(value, 10, 64); err == nil {
+			return mid
+		}
 	}
-	mid, err := strconv.ParseUint(node.InnerText(), 10, 64)
-	if err != nil {
-		return 0
-	}
-	return mid
+	return 0
 }
 
 func (request *Request) MOID() uint64 {
-	node := xmlquery.FindOne(request.XMLQueryNode, "/BixRequest/moid")
-	if node == nil {
-		return 0
+	path := xmlpath.MustCompile("/BixRequest/moid")
+	if value, ok := path.String(request.XMLPathNode); ok {
+		if moid, err := strconv.ParseUint(value, 10, 64); err == nil {
+			return moid
+		}
 	}
-	moid, err := strconv.ParseUint(node.InnerText(), 10, 64)
-	if err != nil {
-		return 0
-	}
-	return moid
+	return 0
 }
 
 func (request *Request) Name() string {
-	node := xmlquery.FindOne(request.XMLQueryNode, "/*")
-	if node == nil {
-		return ""
+	path := xmlpath.MustCompile("/")
+	iter := path.Iter(request.XMLPathNode)
+	for iter.Next() {
+		node := iter.Node()
+		return node.Name().Local
 	}
-	return node.Data
+	return ""
+}
+
+func (request *Request) Namespace() string {
+	path := xmlpath.MustCompile("/BixRequest/toNamespace")
+	if value, ok := path.String(request.XMLPathNode); ok {
+		return value
+	}
+	return ""
 }
 
 func (request *Request) Request() string {
-	node := xmlquery.FindOne(request.XMLQueryNode, "/BixRequest/request")
-	if node == nil {
-		return ""
+	path := xmlpath.MustCompile("/BixRequest/request")
+	if value, ok := path.String(request.XMLPathNode); ok {
+		return value
 	}
-	return node.InnerText()
-}
-
-func (request *Request) ToNamespace() string {
-	node := xmlquery.FindOne(request.XMLQueryNode, "/BixRequest/toNamespace")
-	if node == nil {
-		return ""
-	}
-	return node.InnerText()
+	return ""
 }
 
 // ----------------------------------------------------------------------------
@@ -109,7 +107,7 @@ func (response *Response) Encode(v interface{}) error {
 }
 
 func (response *Response) Error(request *Request, message string) error {
-	bixError := BixError{FromNamespace: request.ToNamespace(), Request: request.Request(), MOID: request.MOID(), MID: request.MID(), Error: message}
+	bixError := BixError{FromNamespace: request.Namespace(), Request: request.Request(), MOID: request.MOID(), MID: request.MID(), Error: message}
 	return response.Encode(bixError)
 }
 
@@ -150,6 +148,8 @@ type Router interface {
 	Handle(ctx *Context)
 }
 
+// ----------------------------------------------------------------------------
+
 type routerImpl struct {
 	registry       map[string]HandlerFunc
 	defaultHandler HandlerFunc
@@ -169,7 +169,8 @@ func (router *routerImpl) Default(handler HandlerFunc) {
 
 func (router *routerImpl) findHandler(ctx *Context) HandlerFunc {
 	for xpath := range router.registry {
-		if node := xmlquery.FindOne(ctx.Request.XMLQueryNode, xpath); node != nil {
+		path := xmlpath.MustCompile(xpath)
+		if _, ok := path.String(ctx.Request.XMLPathNode); ok {
 			handler := router.registry[xpath]
 			return handler
 		}
@@ -179,7 +180,7 @@ func (router *routerImpl) findHandler(ctx *Context) HandlerFunc {
 
 func (router *routerImpl) Handle(ctx *Context) error {
 	handler := router.findHandler(ctx)
-	topic := fmt.Sprintf("%s %s::%s", ctx.Request.Request(), ctx.Request.ToNamespace(), ctx.Request.Name())
+	topic := fmt.Sprintf("%s %s::%s", ctx.Request.Name(), ctx.Request.Namespace(), ctx.Request.Request())
 	if handler == nil {
 		logger.Warnf("No handler for %s", topic)
 		return nil
