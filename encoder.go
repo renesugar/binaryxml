@@ -1,15 +1,17 @@
-// Binary XML marshaller derived from https://golang.org/src/encoding/xml/marshal.go
+// Binary XML marshaler derived from https://golang.org/src/encoding/xml/marshal.go
 
 package binaryxml
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/xml"
 	"fmt"
-	"github.com/cevaris/ordered_map"
 	"io"
 	"reflect"
 	"strconv"
+
+	"github.com/cevaris/ordered_map"
 )
 
 type BinaryXMLEncoder struct {
@@ -56,6 +58,11 @@ func (encoder *BinaryXMLEncoder) marshalValue(val reflect.Value, finfo *fieldInf
 
 	kind := val.Kind()
 	typ := val.Type()
+
+	// Check for marshaler
+	//	if val.CanInterface() && typ.Implements(marshalerType) {
+	//		return encoder.marshalInterface(val.Interface().(xml.Marshaler), startTemplate, table)
+	//	}
 
 	// Slices and arrays iterate over the elements. They do not have an enclosing tag.
 	if (kind == reflect.Slice || kind == reflect.Array) && typ.Elem().Kind() != reflect.Uint8 {
@@ -133,13 +140,54 @@ func (encoder *BinaryXMLEncoder) marshalValue(val reflect.Value, finfo *fieldInf
 	}
 
 	// Write close element
-	binary.Write(encoder.writer, binary.BigEndian, endtagtype)
-
-	return nil
+	return binary.Write(encoder.writer, binary.BigEndian, endtagtype)
 }
 
 func (encoder *BinaryXMLEncoder) marshalAttr(start *xml.StartElement, name xml.Name, finfo *fieldInfo, val reflect.Value, table *ordered_map.OrderedMap) error {
 	writer := encoder.writer
+
+	if val.CanInterface() && val.Type().Implements(marshalerType) {
+		xmlBytes, err := xml.Marshal(val.Interface())
+		if err != nil {
+			return err
+		}
+
+		xmlBytes = bytes.Replace(xmlBytes, []byte(val.Type().Name()+">"), []byte(name.Local+">"), 2)
+
+		// Traverse generated XML snippet
+		buffer := bytes.NewBuffer(xmlBytes)
+		decoder := xml.NewDecoder(buffer)
+		var node xmlTraversalNode
+		if err := decoder.Decode(&node); err != nil {
+			return err
+		}
+		nodetypeCount := 0
+		walk([]xmlTraversalNode{node}, func(node xmlTraversalNode) bool {
+			isElement := len(node.Nodes) > 0
+			var elementNumber uint16
+			if x, ok := table.Get(node.XMLName.Local); ok {
+				elementNumber = uint16(x.(int))
+			} else {
+				fmt.Printf("binaryxml: No table entry for element %s", node.XMLName.Local)
+				return false
+			}
+			if isElement {
+				binary.Write(encoder.writer, binary.BigEndian, nodetype)
+				binary.Write(encoder.writer, binary.BigEndian, elementNumber)
+				nodetypeCount++
+			} else {
+				binary.Write(encoder.writer, binary.BigEndian, strtype)
+				binary.Write(encoder.writer, binary.BigEndian, elementNumber)
+				writer.Write([]byte(node.Content))
+				writer.Write([]byte("\x00"))
+				binary.Write(encoder.writer, binary.BigEndian, endtagtype)
+			}
+			return true
+		})
+		for i := 0; i < nodetypeCount; i++ {
+			binary.Write(encoder.writer, binary.BigEndian, endtagtype)
+		}
+	}
 
 	var elementNumber uint16
 	if x, ok := table.Get(name.Local); ok {

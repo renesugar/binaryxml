@@ -125,6 +125,28 @@ type FixtureA_Data struct {
 	Auth    bool     `xml:"auth"`
 }
 
+type FixtureB struct {
+	XMLName   struct{}           `xml:"FixtureB"`
+	StringMap FixtureB_StringMap `xml:"StringMap"`
+}
+
+type FixtureB_StringMap map[string]string
+
+func (s FixtureB_StringMap) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	tokens := []xml.Token{start}
+	for key, value := range s {
+		t := xml.StartElement{Name: xml.Name{"", key}}
+		tokens = append(tokens, t, xml.CharData(value), xml.EndElement{t.Name})
+	}
+	tokens = append(tokens, xml.EndElement{start.Name})
+	for _, t := range tokens {
+		if err := e.EncodeToken(t); err != nil {
+			return err
+		}
+	}
+	return e.Flush()
+}
+
 func TestEncodeFixture1(t *testing.T) {
 	assert := assert.New(t)
 
@@ -410,4 +432,34 @@ func TestEncodeFixtureA(t *testing.T) {
 	minifiedActualXML, err := minifier.String("text/xml", actualXML)
 	assert.NoError(err)
 	assert.Equal(minifiedExpectedXML, minifiedActualXML)
+}
+
+// ----------------------------------------------------------------------------
+// TestEncodeFixtureB
+// ----------------------------------------------------------------------------
+
+func TestEncodeFixtureB(t *testing.T) {
+	assert := assert.New(t)
+
+	// Prepare test data
+	var fixture FixtureB
+	fixture.StringMap = make(FixtureB_StringMap)
+	fixture.StringMap["abc"] = "123"
+	const expected = "<FixtureB><StringMap><abc>123</abc></StringMap></FixtureB>"
+
+	// Sanity check - struct to XML via Go Marshaller
+	actualBytes, err := xml.Marshal(fixture)
+	assert.NoError(err)
+	actual := string(actualBytes)
+	assert.Equal(expected, actual)
+
+	// Test -- struct to BinaryXML to XML
+	var buffer bytes.Buffer
+	writer := bufio.NewWriter(&buffer)
+	assert.NoError(binaryxml.Encode(fixture, writer))
+	writer.Flush()
+	binaryXML := buffer.Bytes()
+	actual, err = binaryxml.ToXML(binaryXML)
+	assert.NoError(err)
+	assert.Equal(expected, actual)
 }
