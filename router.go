@@ -3,6 +3,7 @@ package binaryxml
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -95,34 +96,51 @@ type Response struct {
 	Param     uint8
 }
 
-func (response *Response) Encode(v interface{}) error {
+// ----------------------------------------------------------------------------
+// Router request context
+// ----------------------------------------------------------------------------
+
+type SendMoreFunc func(*Context) error
+
+type Context struct {
+	Request      *Request
+	Response     *Response
+	SendMoreFunc SendMoreFunc
+}
+
+func NewContext(request *Request) *Context {
+	response := &Response{}
+	return &Context{Request: request, Response: response}
+}
+
+func (ctx *Context) Respond(v interface{}) error {
 	var b bytes.Buffer
 	writer := bufio.NewWriter(&b)
 	if err := Encode(v, writer); err != nil {
 		return err
 	}
 	writer.Flush()
-	response.BinaryXML = b.Bytes()
+	ctx.Response.BinaryXML = b.Bytes()
 	return nil
 }
 
-func (response *Response) Error(request *Request, message string) error {
-	bixError := BixError{FromNamespace: request.Namespace(), Request: request.Request(), MOID: request.MOID(), MID: request.MID(), Error: message}
-	return response.Encode(bixError)
+func (ctx *Context) RespondMore(v interface{}) error {
+	if err := ctx.Respond(v); err != nil {
+		return err
+	}
+	return ctx.sendMore()
 }
 
-// ----------------------------------------------------------------------------
-// Router request context
-// ----------------------------------------------------------------------------
-
-type Context struct {
-	Request  *Request
-	Response *Response
+func (ctx *Context) RespondError(message string) error {
+	bixError := BixError{FromNamespace: ctx.Request.Namespace(), Request: ctx.Request.Request(), MOID: ctx.Request.MOID(), MID: ctx.Request.MID(), Error: message}
+	return ctx.Respond(bixError)
 }
 
-func NewContext(request *Request) *Context {
-	response := &Response{}
-	return &Context{Request: request, Response: response}
+func (ctx *Context) sendMore() error {
+	if ctx.SendMoreFunc == nil {
+		return errors.New("Cannot RespondMore without a Context SendMoreFunc set")
+	}
+	return ctx.SendMoreFunc(ctx)
 }
 
 // ----------------------------------------------------------------------------
