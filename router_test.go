@@ -88,6 +88,6 @@ func TestSetResponseError(t *testing.T) {
 	ctx := NewContext(request)
 	ctx.Response.Error(request, "foo")
 	xml, err := ToXML(ctx.Response.BinaryXML)
-	expected := "<?xml version=\"1.0\"?>\n<BixError><fromNamespace>VirtualMachines</fromNamespace><request>Testing</request><moid>6</moid><mid>1</mid><error>foo</error></BixError>"
+	expected := "<BixError><fromNamespace>VirtualMachines</fromNamespace><request>Testing</request><moid>6</moid><mid>1</mid><error>foo</error></BixError>"
 	assert.Equal(expected, xml)
 }

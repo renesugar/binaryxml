@@ -395,7 +395,7 @@ func TestEncodeFixtureA(t *testing.T) {
 	// Marshal fixtureA to XML
 	expectedXMLBytes, err := xml.Marshal(fixtureA)
 	assert.NoError(err)
-	expectedXML := "<?xml version=\"1.0\"?>\n" + string(expectedXMLBytes)
+	expectedXML := string(expectedXMLBytes)
 
 	// Convert binary xml to XML
 	actualXMLBytes, err := binaryxml.ToXML([]byte(actualBinaryXML))
