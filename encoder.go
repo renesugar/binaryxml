@@ -22,7 +22,7 @@ func NewEncoder(writer io.Writer) *BinaryXMLEncoder {
 
 func (encoder *BinaryXMLEncoder) Encode(v interface{}) error {
 	table := ordered_map.NewOrderedMap()
-	if err := encoder.populateTable(reflect.ValueOf(v), table); err != nil {
+	if err := generateElementNameDictionaryForValue(reflect.ValueOf(v), table); err != nil {
 		return err
 	}
 	if err := encoder.writeTable(table); err != nil {
@@ -31,73 +31,13 @@ func (encoder *BinaryXMLEncoder) Encode(v interface{}) error {
 	return encoder.writeSerial(reflect.ValueOf(v), nil, table)
 }
 
-func (encoder *BinaryXMLEncoder) populateTable(value reflect.Value, table *ordered_map.OrderedMap) error {
-	if !value.IsValid() {
-		return nil
-	}
-
-	// Drill into interfaces and pointers
-	for value.Kind() == reflect.Interface || value.Kind() == reflect.Ptr {
-		if value.IsNil() {
-			return nil
-		}
-		value = value.Elem()
-	}
-
-	typeInfo, err := getTypeInfo(value.Type())
-	if err != nil {
-		return err
-	}
-
-	// Attributes
-	for i := range typeInfo.fields {
-		fieldInfo := &typeInfo.fields[i]
-		fieldValue := fieldInfo.value(value)
-		if fieldInfo.flags&fOmitEmpty != 0 && isEmptyValue(fieldValue) {
-			continue
-		}
-		if fieldValue.Kind() == reflect.Interface && fieldValue.IsNil() {
-			continue
-		}
-		if elementNumber, ok := table.Get(fieldInfo.name); !ok {
-			elementNumber = table.Len() + 1
-			table.Set(fieldInfo.name, elementNumber)
-		}
-		// Drill into nested structs
-		if fieldValue.Kind() == reflect.Struct {
-			encoder.populateTable(fieldValue, table)
-		}
-		// Drill into nested slices
-		if fieldValue.Kind() == reflect.Slice {
-			for i, n := 0, fieldValue.Len(); i < n; i++ {
-				if err := encoder.populateTable(fieldValue.Index(i), table); err != nil {
-					return err
-				}
-			}
-		}
-	}
-
-	// Element name
-	if typeInfo.xmlname != nil {
-		xmlName := typeInfo.xmlname
-		name := xmlName.name
-		if name == "" {
-			if v, ok := xmlName.value(value).Interface().(xml.Name); ok && v.Local != "" {
-				name = v.Local
-			}
-		}
-		if _, ok := table.Get(name); !ok {
-			elementNumber := table.Len() + 1
-			table.Set(name, elementNumber)
-		}
-	}
-
-	return nil
-}
+var (
+	marshalerType = reflect.TypeOf((*xml.Marshaler)(nil)).Elem()
+)
 
 func (encoder *BinaryXMLEncoder) marshalValue(value reflect.Value, fieldInfo *fieldInfo, table *ordered_map.OrderedMap, startElement *xml.StartElement) error {
 	if startElement != nil && startElement.Name.Local == "" {
-		return fmt.Errorf("xml: Encoding is missing name for StartElement")
+		return fmt.Errorf("binaryxml: Encoding is missing name for StartElement")
 	}
 	if !value.IsValid() {
 		return nil
@@ -164,7 +104,7 @@ func (encoder *BinaryXMLEncoder) marshalValue(value reflect.Value, fieldInfo *fi
 			binary.Write(encoder.writer, binary.BigEndian, nodetype)
 			binary.Write(encoder.writer, binary.BigEndian, elementNumber)
 		} else {
-			return fmt.Errorf("xml: failed looking up elementNumber for %s", start.Name.Local)
+			return fmt.Errorf("binaryxml: failed looking up elementNumber for %s", start.Name.Local)
 		}
 	}
 
