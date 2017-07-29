@@ -185,8 +185,6 @@ func (router *routerImpl) Handle(ctx *Context) error {
 		logger.Warnf("No handler for %s", topic)
 		return nil
 	}
-	logger.Infof("Handling %s", topic)
 	err := handler(ctx)
-	logger.Infof("Handling %s done", topic)
 	return err
 }

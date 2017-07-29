@@ -57,7 +57,7 @@ func ToXML(data []byte) (string, error) {
 
 	// Read serial section
 	var xmlBuffer bytes.Buffer
-	xmlBuffer.WriteString("<?xml version=\"1.0\"?>\n")
+	//xmlBuffer.WriteString("<?xml version=\"1.0\"?>\n")
 	if err := readSerialSection(reader, elementNamesById, &xmlBuffer); err != nil {
 		return "", err
 	}

@@ -2,11 +2,13 @@ package binaryxml_test
 
 import (
 	"fmt"
+	"io/ioutil"
+	"strings"
+	"testing"
+
 	"github.com/BixData/binaryxml"
 	"github.com/tdewolff/minify"
 	"github.com/tdewolff/minify/xml"
-	"io/ioutil"
-	"testing"
 )
 
 func TestToXMLWithBinaryFixture1(t *testing.T) {
@@ -51,6 +53,7 @@ func doToXMLTest(fixtureName string, t *testing.T) {
 		t.Errorf("Failed opening %s", fixture)
 	}
 	expectedXml := string(expectedXmlBytes)
+	expectedXml = strings.Replace(expectedXml, "<?xml version=\"1.0\"?>\n", "", 1)
 
 	// Decode binary xml
 	xml, err := binaryxml.ToXML(binaryXml)
