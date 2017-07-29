@@ -59,11 +59,6 @@ func (encoder *BinaryXMLEncoder) marshalValue(val reflect.Value, finfo *fieldInf
 	kind := val.Kind()
 	typ := val.Type()
 
-	// Check for marshaler
-	//	if val.CanInterface() && typ.Implements(marshalerType) {
-	//		return encoder.marshalInterface(val.Interface().(xml.Marshaler), startTemplate, table)
-	//	}
-
 	// Slices and arrays iterate over the elements. They do not have an enclosing tag.
 	if (kind == reflect.Slice || kind == reflect.Array) && typ.Elem().Kind() != reflect.Uint8 {
 		for i, n := 0, val.Len(); i < n; i++ {
