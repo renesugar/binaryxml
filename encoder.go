@@ -35,36 +35,39 @@ var (
 	marshalerType = reflect.TypeOf((*xml.Marshaler)(nil)).Elem()
 )
 
-func (encoder *BinaryXMLEncoder) marshalValue(value reflect.Value, fieldInfo *fieldInfo, table *ordered_map.OrderedMap, startElement *xml.StartElement) error {
-	if startElement != nil && startElement.Name.Local == "" {
+func (encoder *BinaryXMLEncoder) marshalValue(val reflect.Value, finfo *fieldInfo, startTemplate *xml.StartElement, table *ordered_map.OrderedMap) error {
+	if startTemplate != nil && startTemplate.Name.Local == "" {
 		return fmt.Errorf("binaryxml: Encoding is missing name for StartElement")
 	}
-	if !value.IsValid() {
+	if !val.IsValid() {
+		return nil
+	}
+	if finfo != nil && finfo.flags&fOmitEmpty != 0 && isEmptyValue(val) {
 		return nil
 	}
 
 	// Drill into interfaces and pointers
-	for value.Kind() == reflect.Interface || value.Kind() == reflect.Ptr {
-		if value.IsNil() {
+	for val.Kind() == reflect.Interface || val.Kind() == reflect.Ptr {
+		if val.IsNil() {
 			return nil
 		}
-		value = value.Elem()
+		val = val.Elem()
 	}
 
-	kind := value.Kind()
-	type_ := value.Type()
+	kind := val.Kind()
+	typ := val.Type()
 
 	// Slices and arrays iterate over the elements. They do not have an enclosing tag.
-	if (kind == reflect.Slice || kind == reflect.Array) && type_.Elem().Kind() != reflect.Uint8 {
-		for i, n := 0, value.Len(); i < n; i++ {
-			if err := encoder.marshalValue(value.Index(i), fieldInfo, table, startElement); err != nil {
+	if (kind == reflect.Slice || kind == reflect.Array) && typ.Elem().Kind() != reflect.Uint8 {
+		for i, n := 0, val.Len(); i < n; i++ {
+			if err := encoder.marshalValue(val.Index(i), finfo, startTemplate, table); err != nil {
 				return err
 			}
 		}
 		return nil
 	}
 
-	typeInfo, err := getTypeInfo(type_)
+	tinfo, err := getTypeInfo(typ)
 	if err != nil {
 		return err
 	}
@@ -76,23 +79,23 @@ func (encoder *BinaryXMLEncoder) marshalValue(value reflect.Value, fieldInfo *fi
 	// 3. type name
 
 	var start xml.StartElement
-	if startElement != nil {
-		start.Name = startElement.Name
-	} else if typeInfo.xmlname != nil {
-		xmlname := typeInfo.xmlname
+	if startTemplate != nil {
+		start.Name = startTemplate.Name
+	} else if tinfo.xmlname != nil {
+		xmlname := tinfo.xmlname
 		if xmlname.name != "" {
 			start.Name.Space, start.Name.Local = xmlname.xmlns, xmlname.name
-		} else if v, ok := xmlname.value(value).Interface().(xml.Name); ok && v.Local != "" {
+		} else if v, ok := xmlname.value(val).Interface().(xml.Name); ok && v.Local != "" {
 			start.Name = v
 		}
 	}
-	if start.Name.Local == "" && fieldInfo != nil {
-		start.Name.Space, start.Name.Local = fieldInfo.xmlns, fieldInfo.name
+	if start.Name.Local == "" && finfo != nil {
+		start.Name.Space, start.Name.Local = finfo.xmlns, finfo.name
 	}
 	if start.Name.Local == "" {
-		name := type_.Name()
+		name := typ.Name()
 		if name == "" {
-			return &xml.UnsupportedTypeError{type_}
+			return &xml.UnsupportedTypeError{typ}
 		}
 		start.Name.Local = name
 	}
@@ -109,22 +112,22 @@ func (encoder *BinaryXMLEncoder) marshalValue(value reflect.Value, fieldInfo *fi
 	}
 
 	// Attributes
-	for i := range typeInfo.fields {
-		fieldInfo := &typeInfo.fields[i]
-		// 		if fieldInfo.flags&fAttr == 0 {
+	for i := range tinfo.fields {
+		finfo := &tinfo.fields[i]
+		// 		if finfo.flags&fAttr == 0 {
 		// 			fmt.Printf("*skipping because fAttr==0\n")
 		// 			continue
 		// 		}
-		fv := fieldInfo.value(value)
-		if fieldInfo.flags&fOmitEmpty != 0 && isEmptyValue(fv) {
+		fv := finfo.value(val)
+		if finfo.flags&fOmitEmpty != 0 && isEmptyValue(fv) {
 			continue
 		}
 		if fv.Kind() == reflect.Interface && fv.IsNil() {
 			continue
 		}
 
-		name := xml.Name{Space: fieldInfo.xmlns, Local: fieldInfo.name}
-		if err := encoder.marshalAttr(&start, name, fieldInfo, fv, table); err != nil {
+		name := xml.Name{Space: finfo.xmlns, Local: finfo.name}
+		if err := encoder.marshalAttr(&start, name, finfo, fv, table); err != nil {
 			return err
 		}
 	}
@@ -135,25 +138,7 @@ func (encoder *BinaryXMLEncoder) marshalValue(value reflect.Value, fieldInfo *fi
 	return nil
 }
 
-func isEmptyValue(v reflect.Value) bool {
-	switch v.Kind() {
-	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
-		return v.Len() == 0
-	case reflect.Bool:
-		return !v.Bool()
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return v.Int() == 0
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		return v.Uint() == 0
-	case reflect.Float32, reflect.Float64:
-		return v.Float() == 0
-	case reflect.Interface, reflect.Ptr:
-		return v.IsNil()
-	}
-	return false
-}
-
-func (encoder *BinaryXMLEncoder) marshalAttr(start *xml.StartElement, name xml.Name, fieldInfo *fieldInfo, value reflect.Value, table *ordered_map.OrderedMap) error {
+func (encoder *BinaryXMLEncoder) marshalAttr(start *xml.StartElement, name xml.Name, finfo *fieldInfo, val reflect.Value, table *ordered_map.OrderedMap) error {
 	writer := encoder.writer
 
 	var elementNumber uint16
@@ -163,84 +148,84 @@ func (encoder *BinaryXMLEncoder) marshalAttr(start *xml.StartElement, name xml.N
 		return fmt.Errorf("No table entry for element %s", name.Local)
 	}
 
-	switch value.Kind() {
+	switch val.Kind() {
 	case reflect.Bool:
 		binary.Write(writer, binary.BigEndian, strtype)
 		binary.Write(writer, binary.BigEndian, elementNumber)
-		writer.Write([]byte(strconv.FormatBool(value.Bool())))
+		writer.Write([]byte(strconv.FormatBool(val.Bool())))
 		writer.Write([]byte("\x00"))
 		binary.Write(writer, binary.BigEndian, endtagtype)
 	case reflect.Float32:
 		binary.Write(writer, binary.BigEndian, float4type)
 		binary.Write(writer, binary.BigEndian, elementNumber)
-		binary.Write(writer, binary.BigEndian, float32(value.Float()))
+		binary.Write(writer, binary.BigEndian, float32(val.Float()))
 		binary.Write(writer, binary.BigEndian, endtagtype)
 	case reflect.Int8:
 		binary.Write(writer, binary.BigEndian, int1btype)
 		binary.Write(writer, binary.BigEndian, elementNumber)
-		binary.Write(writer, binary.BigEndian, int8(value.Int()))
+		binary.Write(writer, binary.BigEndian, int8(val.Int()))
 		binary.Write(writer, binary.BigEndian, endtagtype)
 	case reflect.Int16:
 		binary.Write(writer, binary.BigEndian, int2btype)
 		binary.Write(writer, binary.BigEndian, elementNumber)
-		binary.Write(writer, binary.BigEndian, int16(value.Int()))
+		binary.Write(writer, binary.BigEndian, int16(val.Int()))
 		binary.Write(writer, binary.BigEndian, endtagtype)
 	case reflect.Int32:
 		binary.Write(writer, binary.BigEndian, int4btype)
 		binary.Write(writer, binary.BigEndian, elementNumber)
-		binary.Write(writer, binary.BigEndian, int32(value.Int()))
+		binary.Write(writer, binary.BigEndian, int32(val.Int()))
 		binary.Write(writer, binary.BigEndian, endtagtype)
 	case reflect.Int64:
 		binary.Write(writer, binary.BigEndian, int8btype)
 		binary.Write(writer, binary.BigEndian, elementNumber)
-		binary.Write(writer, binary.BigEndian, int64(value.Int()))
+		binary.Write(writer, binary.BigEndian, int64(val.Int()))
 		binary.Write(writer, binary.BigEndian, endtagtype)
 	case reflect.Uint8:
 		binary.Write(writer, binary.BigEndian, uint1btype)
 		binary.Write(writer, binary.BigEndian, elementNumber)
-		binary.Write(writer, binary.BigEndian, uint8(value.Uint()))
+		binary.Write(writer, binary.BigEndian, uint8(val.Uint()))
 		binary.Write(writer, binary.BigEndian, endtagtype)
 	case reflect.Uint16:
 		binary.Write(writer, binary.BigEndian, uint2btype)
 		binary.Write(writer, binary.BigEndian, elementNumber)
-		binary.Write(writer, binary.BigEndian, uint16(value.Uint()))
+		binary.Write(writer, binary.BigEndian, uint16(val.Uint()))
 		binary.Write(writer, binary.BigEndian, endtagtype)
 	case reflect.Uint32:
 		binary.Write(writer, binary.BigEndian, uint4btype)
 		binary.Write(writer, binary.BigEndian, elementNumber)
-		binary.Write(writer, binary.BigEndian, uint32(value.Uint()))
+		binary.Write(writer, binary.BigEndian, uint32(val.Uint()))
 		binary.Write(writer, binary.BigEndian, endtagtype)
 	case reflect.String:
 		binary.Write(writer, binary.BigEndian, strtype)
 		binary.Write(writer, binary.BigEndian, elementNumber)
-		writer.Write([]byte(value.String()))
+		writer.Write([]byte(val.String()))
 		writer.Write([]byte("\x00"))
 		binary.Write(writer, binary.BigEndian, endtagtype)
 	case reflect.Uint64:
 		binary.Write(writer, binary.BigEndian, uint8btype)
 		binary.Write(writer, binary.BigEndian, elementNumber)
-		binary.Write(writer, binary.BigEndian, value.Uint())
+		binary.Write(writer, binary.BigEndian, val.Uint())
 		binary.Write(writer, binary.BigEndian, endtagtype)
 	case reflect.Slice:
-		if value.Type().Elem().Kind() == reflect.Uint8 { // binary
+		if val.Type().Elem().Kind() == reflect.Uint8 { // binary
 			binary.Write(writer, binary.BigEndian, binarytype)
 			binary.Write(writer, binary.BigEndian, elementNumber)
-			binary.Write(writer, binary.BigEndian, uint32(value.Len()))
-			binary.Write(writer, binary.BigEndian, value.Bytes())
+			binary.Write(writer, binary.BigEndian, uint32(val.Len()))
+			binary.Write(writer, binary.BigEndian, val.Bytes())
 			binary.Write(writer, binary.BigEndian, endtagtype)
 		} else { // Walk slices of nested elements
-			for i, n := 0, value.Len(); i < n; i++ {
-				var startElement xml.StartElement
-				startElement.Name.Local = fieldInfo.name
-				if err := encoder.marshalValue(value.Index(i), fieldInfo, table, &startElement); err != nil {
+			for i, n := 0, val.Len(); i < n; i++ {
+				var start xml.StartElement
+				start.Name.Local = finfo.name
+				if err := encoder.marshalValue(val.Index(i), finfo, &start, table); err != nil {
 					return err
 				}
 			}
 		}
 	case reflect.Struct:
 		var startElement xml.StartElement
-		startElement.Name.Local = fieldInfo.name
-		if err := encoder.marshalValue(value, fieldInfo, table, &startElement); err != nil {
+		startElement.Name.Local = finfo.name
+		if err := encoder.marshalValue(val, finfo, &startElement, table); err != nil {
 			return err
 		}
 	}
@@ -275,14 +260,14 @@ func (encoder *BinaryXMLEncoder) writeTable(table *ordered_map.OrderedMap) error
 	return nil
 }
 
-func (encoder *BinaryXMLEncoder) writeSerial(value reflect.Value, fieldInfo *fieldInfo, table *ordered_map.OrderedMap) error {
+func (encoder *BinaryXMLEncoder) writeSerial(val reflect.Value, finfo *fieldInfo, table *ordered_map.OrderedMap) error {
 	// Write serial begin marker
 	if err := binary.Write(encoder.writer, binary.BigEndian, serialbegin); err != nil {
 		return err
 	}
 
 	// Write serial section
-	if err := encoder.marshalValue(value, nil, table, nil); err != nil {
+	if err := encoder.marshalValue(val, nil, nil, table); err != nil {
 		return err
 	}
 
@@ -292,4 +277,22 @@ func (encoder *BinaryXMLEncoder) writeSerial(value reflect.Value, fieldInfo *fie
 	}
 
 	return nil
+}
+
+func isEmptyValue(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
+		return v.Len() == 0
+	case reflect.Bool:
+		return !v.Bool()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return v.Uint() == 0
+	case reflect.Float32, reflect.Float64:
+		return v.Float() == 0
+	case reflect.Interface, reflect.Ptr:
+		return v.IsNil()
+	}
+	return false
 }
