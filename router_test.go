@@ -86,8 +86,41 @@ func TestSetResponseError(t *testing.T) {
 	request, err := NewRequest(binaryXml)
 	assert.NoError(err)
 	ctx := NewContext(request)
-	ctx.Response.Error(request, "foo")
+	ctx.RespondError("foo")
 	xml, err := ToXML(ctx.Response.BinaryXML)
 	expected := "<BixError><fromNamespace>VirtualMachines</fromNamespace><request>Testing</request><moid>6</moid><mid>1</mid><error>foo</error></BixError>"
+	assert.Equal(expected, xml)
+}
+
+// ----------------------------------------------------------------------------
+// Test response continuation capability.
+//
+//   Recv: BixRequest
+//   Send: BixResponse - RespondMore() // intermediate "more" response
+//   Send: BixResponse - RespondMore() // intermediate "more" response
+//   Send: BixResponse - Respond       // final response
+// ----------------------------------------------------------------------------
+
+func TestRespondMore(t *testing.T) {
+	assert := assert.New(t)
+	type bixResponse struct {
+		XMLName struct{} `xml:"BixResponse"`
+		Data    string   `xml:"Data"`
+	}
+	binaryXml, err := ioutil.ReadFile("testdata/test-systemlib-1.binaryxml")
+	assert.NoError(err)
+	request, err := NewRequest(binaryXml)
+	assert.NoError(err)
+	ctx := NewContext(request)
+	assert.Error(ctx.RespondMore(bixResponse{Data: "partial"}), "Expected error if no 'send more' handler has been set")
+	sendMoreFuncCalled := false
+	ctx.SendMoreFunc = func(ctx *Context) error {
+		sendMoreFuncCalled = true
+		return nil
+	}
+	assert.NoError(ctx.RespondMore(bixResponse{Data: "partial"}))
+	ctx.Respond(bixResponse{Data: "done"})
+	xml, err := ToXML(ctx.Response.BinaryXML)
+	expected := "<BixResponse><Data>done</Data></BixResponse>"
 	assert.Equal(expected, xml)
 }
