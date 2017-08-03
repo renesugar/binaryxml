@@ -17,11 +17,12 @@ import (
 // ----------------------------------------------------------------------------
 
 type Request struct {
-	RemoteAddr  string
-	XML         string
-	BinaryXML   []byte
-	Param       uint8
-	XMLPathNode *xmlpath.Node
+	ConnectionID uint64
+	RemoteAddr   string
+	XML          string
+	BinaryXML    []byte
+	Param        uint8
+	XMLPathNode  *xmlpath.Node
 }
 
 func NewRequest(binaryXml []byte) (*Request, error) {
