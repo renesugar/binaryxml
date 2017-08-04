@@ -12,7 +12,7 @@ import (
 func TestDecodeFixture1(t *testing.T) {
 	assert := assert.New(t)
 
-	// Read XML fixture #1
+	// Read Binary XML fixture #1
 	fixture := "testdata/test-systemlib-1.binaryxml"
 	fmt.Printf("Loading fixture %s\n", fixture)
 	binaryXML, err := ioutil.ReadFile(fixture)
@@ -32,7 +32,7 @@ func TestDecodeFixture1(t *testing.T) {
 func TestDecodeFixture2(t *testing.T) {
 	assert := assert.New(t)
 
-	// Read XML fixture #2
+	// Read Binary XML fixture #2
 	fixture := "testdata/test-systemlib-2.binaryxml"
 	fmt.Printf("Loading fixture %s\n", fixture)
 	binaryXML, err := ioutil.ReadFile(fixture)
@@ -60,13 +60,13 @@ func TestDecodeFixture2(t *testing.T) {
 func TestDecodeFixture3(t *testing.T) {
 	assert := assert.New(t)
 
-	// Read XML fixture #3
+	// Read Binary XML fixture #3
 	fixture := "testdata/test-systemlib-3.binaryxml"
 	fmt.Printf("Loading fixture %s\n", fixture)
 	binaryXML, err := ioutil.ReadFile(fixture)
 	assert.NoError(err)
 
-	// Unmarshal XML file into Fixture2 structure
+	// Decode Binary XML into Fixture2 structure
 	fixture3 := Fixture3{}
 	assert.NoError(binaryxml.Decode(binaryXML, &fixture3))
 
@@ -86,13 +86,13 @@ func TestDecodeFixture3(t *testing.T) {
 func TestDecodeFixture4(t *testing.T) {
 	assert := assert.New(t)
 
-	// Read XML fixture #4
+	// Read Binary XML fixture #4
 	fixture := "testdata/test-systemlib-4.binaryxml"
 	fmt.Printf("Loading fixture %s\n", fixture)
 	binaryXML, err := ioutil.ReadFile(fixture)
 	assert.NoError(err)
 
-	// Unmarshal XML file into Fixture4 structure
+	// Decode Binary XML into Fixture4 structure
 	fixture4 := Fixture4{}
 	assert.NoError(binaryxml.Decode(binaryXML, &fixture4))
 
@@ -114,13 +114,13 @@ func TestDecodeFixture4(t *testing.T) {
 func TestDecodeFixture5(t *testing.T) {
 	assert := assert.New(t)
 
-	// Read XML fixture #5
+	// Read Binary XML fixture #5
 	fixture := "testdata/test-systemlib-5.binaryxml"
 	fmt.Printf("Loading fixture %s\n", fixture)
 	binaryXML, err := ioutil.ReadFile(fixture)
 	assert.NoError(err)
 
-	// Unmarshal XML file into Fixture5 structure
+	// Decode Binary XML into Fixture5 structure
 	fixture5 := Fixture5{}
 	assert.NoError(binaryxml.Decode(binaryXML, &fixture5))
 
