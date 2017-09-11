@@ -122,6 +122,7 @@ func (ctx *Context) Respond(v interface{}) error {
 	}
 	writer.Flush()
 	ctx.Response.BinaryXML = b.Bytes()
+	ctx.Response.Param = 1
 	return nil
 }
 
