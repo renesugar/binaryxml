@@ -17,8 +17,8 @@ type Fixture1 struct {
 	XMLName     struct{} `xml:"BixRequest"`
 	Request     string   `xml:"request"`
 	ToNamespace string   `xml:"toNamespace"`
-	MOID        string   `xml:"moid"`
-	MID         string   `xml:"mid"`
+	MOID        uint64   `xml:"moid"`
+	MID         uint64   `xml:"mid"`
 }
 
 func TestGenerateDictionaryForFixture1(t *testing.T) {

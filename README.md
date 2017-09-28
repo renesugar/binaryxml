@@ -54,8 +54,8 @@ func handleInternalGetAuthRequest(ctx *Context) error {
 		XMLName       struct{}        `xml:"BixResponse"`
 		FromNamespace string          `xml:"fromNamespace"`
 		Request       string          `xml:"request"`
-		MOID          string          `xml:"moid"`
-		MID           string          `xml:"mid"`
+		MOID          uint64          `xml:"moid"`
+		MID           uint64          `xml:"mid"`
 		Data          bixResponseData `xml:"Data"`
 	}
 	type bixResponseData struct {
