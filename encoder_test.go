@@ -19,22 +19,22 @@ type Fixture1 struct {
 	XMLName     struct{} `xml:"BixRequest"`
 	Request     string   `xml:"request"`
 	ToNamespace string   `xml:"toNamespace"`
-	MOID        string   `xml:"moid"`
-	MID         string   `xml:"mid"`
+	MOID        uint64   `xml:"moid"`
+	MID         uint64   `xml:"mid"`
 }
 
 type Fixture2 struct {
 	XMLName     struct{}      `xml:"BixRequest"`
 	ToNamespace string        `xml:"toNamespace"`
 	Request     string        `xml:"request"`
-	MOID        string        `xml:"moid"`
-	MID         string        `xml:"mid"`
+	MOID        uint64        `xml:"moid"`
+	MID         uint64        `xml:"mid"`
 	Data        Fixture2_Data `xml:"Data"`
 }
 
 type Fixture2_Data struct {
 	XMLName struct{}       `xml:"Data"`
-	MOID    string         `xml:"moid"`
+	MOID    uint64         `xml:"moid"`
 	Query   Fixture2_Query `xml:"Query"`
 }
 
