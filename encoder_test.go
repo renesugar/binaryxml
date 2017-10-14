@@ -164,8 +164,8 @@ func TestEncodeFixture1(t *testing.T) {
 	// Sanity check - ensure fixture1 contains expected values loaded from file, before starting test
 	assert.Equal("VirtualMachines", fixture1.ToNamespace)
 	assert.Equal("Testing", fixture1.Request)
-	assert.Equal("6", fixture1.MOID)
-	assert.Equal("1", fixture1.MID)
+	assert.Equal(uint64(6), fixture1.MOID)
+	assert.Equal(uint64(1), fixture1.MID)
 
 	// Encode structure as binary xml
 	file, _ := ioutil.TempFile("", "binaryxmlEncoderTest1")
@@ -205,9 +205,9 @@ func TestEncodeFixture2(t *testing.T) {
 	// Sanity check - ensure fixture2 contains expected values loaded from file, before starting test
 	assert.Equal("SubscriptionProvider", fixture2.ToNamespace)
 	assert.Equal("Subscribe", fixture2.Request)
-	assert.Equal("2", fixture2.MOID)
-	assert.Equal("2", fixture2.MID)
-	assert.Equal("3", fixture2.Data.MOID)
+	assert.Equal(uint64(2), fixture2.MOID)
+	assert.Equal(uint64(2), fixture2.MID)
+	assert.Equal(uint64(3), fixture2.Data.MOID)
 	assert.Equal("Common_CPU", fixture2.Data.Query.Namespace)
 	assert.Equal("_Total", fixture2.Data.Query.Instance)
 	assert.Equal("*", fixture2.Data.Query.Key)
