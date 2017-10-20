@@ -13,4 +13,4 @@ WORKDIR github.com/BixData/binaryxml
 RUN make gogets
 
 # Run tests
-RUN go test -v github.com/BixData/binaryxml | $GOPATH/bin/go-junit-report > /test-report.xml
+RUN go test -v ./... | $GOPATH/bin/go-junit-report > /test-report.xml
