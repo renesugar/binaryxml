@@ -1,4 +1,4 @@
-package binaryxml
+package binaryxml_router
 
 import (
 	"io/ioutil"
@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/BixData/binaryxml"
 	"github.com/docktermj/go-logger/logger"
 	"github.com/stretchr/testify/assert"
 )
@@ -87,7 +88,7 @@ func TestSetResponseError(t *testing.T) {
 	assert.NoError(err)
 	ctx := NewContext(request)
 	ctx.RespondError("foo")
-	xml, err := ToXML(ctx.Response.BinaryXML)
+	xml, err := binaryxml.ToXML(ctx.Response.BinaryXML)
 	expected := "<BixError><fromNamespace>VirtualMachines</fromNamespace><request>Testing</request><moid>6</moid><mid>1</mid><error>foo</error></BixError>"
 	assert.Equal(expected, xml)
 }
@@ -120,7 +121,7 @@ func TestRespondMore(t *testing.T) {
 	}
 	assert.NoError(ctx.RespondMore(bixResponse{Data: "partial"}))
 	ctx.Respond(bixResponse{Data: "done"})
-	xml, err := ToXML(ctx.Response.BinaryXML)
+	xml, err := binaryxml.ToXML(ctx.Response.BinaryXML)
 	expected := "<BixResponse><Data>done</Data></BixResponse>"
 	assert.Equal(expected, xml)
 }

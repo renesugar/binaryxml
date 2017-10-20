@@ -1,4 +1,4 @@
-package binaryxml
+package binaryxml_router
 
 import (
 	"bufio"
@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/BixData/binaryxml"
 	"github.com/docktermj/go-logger/logger"
 	"github.com/jnewmoyer/xmlpath"
 )
@@ -27,7 +28,7 @@ type Request struct {
 
 func NewRequest(binaryXml []byte) (*Request, error) {
 	// Populate XML field
-	xml, err := ToXML(binaryXml)
+	xml, err := binaryxml.ToXML(binaryXml)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +118,7 @@ func NewContext(request *Request) *Context {
 func (ctx *Context) Respond(v interface{}) error {
 	var b bytes.Buffer
 	writer := bufio.NewWriter(&b)
-	if err := Encode(v, writer); err != nil {
+	if err := binaryxml.Encode(v, writer); err != nil {
 		return err
 	}
 	writer.Flush()
@@ -134,7 +135,7 @@ func (ctx *Context) RespondMore(v interface{}) error {
 }
 
 func (ctx *Context) RespondError(message string) error {
-	bixError := BixError{FromNamespace: ctx.Request.Namespace(), Request: ctx.Request.Request(), MOID: ctx.Request.MOID(), MID: ctx.Request.MID(), Error: message}
+	bixError := binaryxml.BixError{FromNamespace: ctx.Request.Namespace(), Request: ctx.Request.Request(), MOID: ctx.Request.MOID(), MID: ctx.Request.MID(), Error: message}
 	return ctx.Respond(bixError)
 }
 

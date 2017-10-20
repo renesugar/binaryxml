@@ -2,9 +2,16 @@
 
 This GoLang library provides encoding and decoding support for NuBix binary xml.
 
-## Usage
+## Table of Contents
 
-### Convert Binary XML to XML
+* [Convert Binary XML to XML](#convert-binary-xml-to-xml)
+* [Encode a Struct](#encode-a-struct)
+* [Decode a Struct](#decode-a-struct)
+* [Routing](#routing)
+  * [Routing Requests](#routing-requests)
+* [Testing](#testing)
+
+## Convert Binary XML to XML
 
 ```go
 import (
@@ -16,7 +23,9 @@ binaryXml, _ := ioutil.ReadFile("mydata.binaryxml")
 xml, err := binaryxml.ToXML(binaryXml)
 ```
 
-### Encode a struct
+## Encode a Struct
+
+The following code converts a struct to Binary XML.
 
 ```go
 import (
@@ -41,7 +50,20 @@ err := binaryxml.Encode(person, writer);
 writer.Flush()
 ```
 
-### Routing requests
+## Decode a Struct
+
+Hydrating a struct with decoded Binary XML is currently accomplished through intermediate use of XML, which might experience some loss of data fidelity due to sub-optimal datatype transfer. This feature is ripe for future improvement.
+
+```go
+person := Person{}
+err := binaryxml.Decode(binaryXml, &person)
+```
+
+## Routing
+
+The `router` sub-package provides a network reactor that assigns incoming messages to handlers according to XPath expressions  designed to be matched against BixRequest fields. This is meant to provide a more modern alternative to the Bix `MessageObject` peering interface. This package is made separate so that it can be ignored, if a pure Bix `MessageObject` reactor will be used instead.
+
+### Routing Requests
 
 ```go
 router := binaryxml.NewRouter()
@@ -96,8 +118,8 @@ for {
 Setup a workspace:
 
 ```
-$ mkdir -p workspaces/nubix/agent/src/github.com/BixData
-$ cd workspaces/nubix/agent
+$ mkdir -p workspaces/go/src/github.com/BixData
+$ cd workspaces/go
 $ export GOPATH=`pwd`
 $ cd src/github.com/BixData
 $ git clone <this repo>
@@ -108,8 +130,7 @@ $ make gogets
 And then test with:
 
 ```
-$ go test
-...
-PASS
-ok  	github.com/BixData/binaryxml	0.036s
+$ go test ./...
+ok  	github.com/BixData/binaryxml	0.038s
+ok  	github.com/BixData/binaryxml/router	0.033s
 ```
