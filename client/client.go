@@ -45,6 +45,14 @@ func (self *Client) ReceiveRaw(param *uint8, binaryXML *[]byte) error {
 	return binaryxml_messages.ReadMessage(self.Reader, param, binaryXML)
 }
 
+func (self *Client) Receive(param *uint8, res interface{}) error {
+	var binaryXML []byte
+	if err := self.ReceiveRaw(param, &binaryXML); err != nil {
+		return err
+	}
+	return binaryxml.Decode(binaryXML, &res)
+}
+
 // ----------------------------------------------------------------------------
 
 func Connect(host string, port int) (*Client, error) {
