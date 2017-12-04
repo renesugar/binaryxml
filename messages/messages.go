@@ -2,6 +2,7 @@ package binaryxml_messages
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"hash/crc32"
 	"io"
@@ -35,6 +36,11 @@ func ReadMessage(reader io.Reader, param *uint8, binaryXML *[]byte) error {
 	// Read param
 	if err := binary.Read(reader, binary.BigEndian, param); err != nil {
 		return err
+	}
+
+	if messageLength > 16384 {
+		errMsg := fmt.Sprintf("message length too long - %d", messageLength)
+		return errors.New(errMsg)
 	}
 
 	// Read message
