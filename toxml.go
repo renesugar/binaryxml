@@ -3,6 +3,7 @@ package binaryxml
 import (
 	"bytes"
 	"container/list"
+	"encoding/base64"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -119,7 +120,8 @@ func readSerialSection(reader io.Reader, elementNamesById map[uint16]string, res
 			if err := binary.Read(reader, binary.BigEndian, &value); err != nil {
 				return err
 			}
-			response.WriteString("[BINARYDATA]")
+			// writing base64 encoded version of value
+			response.Write([]byte(base64.StdEncoding.EncodeToString(value)))
 		case float4type:
 			var value float32
 			if err := binary.Read(reader, binary.BigEndian, &value); err != nil {
