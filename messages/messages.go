@@ -38,7 +38,7 @@ func ReadMessage(reader io.Reader, param *uint8, binaryXML *[]byte) error {
 		return err
 	}
 
-	if messageLength > 16384 {
+	if messageLength > 262144 {
 		errMsg := fmt.Sprintf("message length too long - %d", messageLength)
 		return errors.New(errMsg)
 	}
