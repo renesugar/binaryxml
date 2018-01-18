@@ -3,6 +3,7 @@ package binaryxml_client
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"net"
 
@@ -50,7 +51,15 @@ func (self *Client) Receive(param *uint8, res interface{}) error {
 	if err := self.ReceiveRaw(param, &binaryXML); err != nil {
 		return err
 	}
-	return binaryxml.Decode(binaryXML, &res)
+	err := binaryxml.Decode(binaryXML, &res)
+	if err != nil {
+		var bixError binaryxml.BixError
+		err2 := binaryxml.Decode(binaryXML, &bixError)
+		if err2 == nil && bixError.Error != "" {
+			return errors.New(bixError.Error)
+		}
+	}
+	return err
 }
 
 // ----------------------------------------------------------------------------
