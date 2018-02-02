@@ -7,4 +7,9 @@ pipeline {
             }
         }
     }
+    post {
+        always {
+            junit 'target/test-report.xml'
+        }
+    }
 }
