@@ -1,3 +1,9 @@
+.PHONY: check
+check:
+	-mkdir -p target
+	./runtests.sh
+
+  
 .PHONY: gogets
 gogets:
 	go get github.com/cevaris/ordered_map
@@ -5,3 +11,8 @@ gogets:
 	go get github.com/jnewmoyer/xmlpath
 	go get github.com/stretchr/testify/assert
 	go get github.com/tdewolff/minify/xml
+
+
+.PHONY: clean
+clean:
+	-rm -rf target

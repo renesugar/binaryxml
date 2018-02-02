@@ -12,5 +12,9 @@ COPY . github.com/BixData/binaryxml
 WORKDIR github.com/BixData/binaryxml
 RUN make gogets
 
-# Run tests
-RUN go test -v ./... | $GOPATH/bin/go-junit-report > /test-report.xml
+# Build
+RUN go install
+
+# Configure runtime environment
+ADD runtests.sh runtests.sh
+VOLUME /go/src/github.com/BixData/binaryxml/target
