@@ -16,5 +16,4 @@ RUN make gogets
 RUN go install
 
 # Configure runtime environment
-ADD runtests.sh runtests.sh
 VOLUME /go/src/github.com/BixData/binaryxml/target
