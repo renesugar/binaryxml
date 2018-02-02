@@ -1,6 +1,11 @@
 pipeline {
     agent { dockerfile true }
     stages {
+        stage('Start') {
+            steps {
+                slackSend message:"${currentBuild.fullDisplayName} started (<${env.BUILD_URL}|Open>)"
+            }
+        }
         stage('Test') {
             steps {
                 sh 'make check'
