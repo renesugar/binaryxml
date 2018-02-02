@@ -19,6 +19,9 @@ pipeline {
         success {
             slackSend color:'good', message:"${currentBuild.fullDisplayName} completed successfully (<${env.BUILD_URL}|Open>)"
         }
+        unstable {
+            slackSend color:'warning', message:"${currentBuild.fullDisplayName} has become unstable (<${env.BUILD_URL}|Open>)"
+        }
         failure {
             slackSend color:'bad', message:"${currentBuild.fullDisplayName} failed (<${env.BUILD_URL}|Open>)"
         }
