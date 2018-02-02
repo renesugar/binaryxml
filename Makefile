@@ -1,7 +1,7 @@
 .PHONY: check
 check:
 	-mkdir -p target
-	./runtests.sh
+	go test -v ./... | tee /dev/stderr | $$GOPATH/bin/go-junit-report > target/test-report.xml
 
   
 .PHONY: gogets
