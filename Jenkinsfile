@@ -12,10 +12,10 @@ pipeline {
             junit 'target/test-report.xml'
         }
         success {
-            slackSend color:'good', message:"Job ${currentBuild.fullDisplayName} completed successfully"
+            slackSend color:'good', message:"${currentBuild.fullDisplayName} completed successfully (<${env.BUILD_URL}|Open>)"
         }
         failure {
-            slackSend color:'bad', message:"Job ${currentBuild.fullDisplayName} failed"
+            slackSend color:'bad', message:"${currentBuild.fullDisplayName} failed (<${env.BUILD_URL}|Open>)"
         }
     }
 }
