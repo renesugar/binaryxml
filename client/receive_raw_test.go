@@ -1,4 +1,4 @@
-package client
+package client_test
 
 import (
 	"bufio"
@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/BixData/binaryxml"
+	"github.com/BixData/binaryxml/client"
 	"github.com/BixData/binaryxml/messages"
 	"github.com/docktermj/go-logger/logger"
 	"github.com/stretchr/testify/assert"
@@ -80,7 +81,7 @@ func TestReceiveRaw(t *testing.T) {
 	}()
 
 	// Create a client
-	client, err := Connect("127.0.0.1", port)
+	client, err := client.Connect("127.0.0.1", port)
 	assert.NoError(err)
 
 	time.Sleep(20 * time.Millisecond)
