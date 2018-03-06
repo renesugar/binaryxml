@@ -1,4 +1,4 @@
-package binaryxml_client_test
+package client
 
 import (
 	"bufio"
@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/BixData/binaryxml/client"
 	"github.com/BixData/binaryxml/messages"
 	"github.com/docktermj/go-logger/logger"
 	"github.com/stretchr/testify/assert"
@@ -38,7 +37,7 @@ func TestSend(t *testing.T) {
 		reader := bufio.NewReader(conn)
 		var param uint8
 		var binaryXML []byte
-		if listenerErr = binaryxml_messages.ReadMessage(reader, &param, &binaryXML); listenerErr != nil {
+		if listenerErr = messages.ReadMessage(reader, &param, &binaryXML); listenerErr != nil {
 			return
 		}
 		received = true
@@ -46,7 +45,7 @@ func TestSend(t *testing.T) {
 	}()
 
 	// Create a client
-	client, err := binaryxml_client.Connect("127.0.0.1", port)
+	client, err := Connect("127.0.0.1", port)
 	assert.NoError(err)
 
 	time.Sleep(20 * time.Millisecond)

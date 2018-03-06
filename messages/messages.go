@@ -1,4 +1,4 @@
-package binaryxml_messages
+package messages
 
 import (
 	"encoding/binary"
