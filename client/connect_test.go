@@ -1,10 +1,11 @@
-package client
+package client_test
 
 import (
 	"net"
 	"testing"
 	"time"
 
+	"github.com/BixData/binaryxml/client"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,7 +23,7 @@ func TestConnect(t *testing.T) {
 		}
 	}()
 
-	_, err = Connect("127.0.0.1", port)
+	_, err = client.Connect("127.0.0.1", port)
 	assert.NoError(err)
 
 	time.Sleep(20 * time.Millisecond)
