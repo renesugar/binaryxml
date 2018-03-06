@@ -1,4 +1,4 @@
-package binaryxml_router
+package router
 
 import (
 	"bufio"

@@ -1,4 +1,4 @@
-package binaryxml_client
+package client
 
 import (
 	"bufio"
@@ -25,7 +25,7 @@ func (self *Client) Close() error {
 }
 
 func (self *Client) SendRaw(param uint8, binaryXML []byte) error {
-	if err := binaryxml_messages.WriteMessage(self.Writer, param, binaryXML); err != nil {
+	if err := messages.WriteMessage(self.Writer, param, binaryXML); err != nil {
 		return err
 	}
 	return self.Writer.Flush()
@@ -43,7 +43,7 @@ func (self *Client) Send(param uint8, req interface{}) error {
 }
 
 func (self *Client) ReceiveRaw(param *uint8, binaryXML *[]byte) error {
-	return binaryxml_messages.ReadMessage(self.Reader, param, binaryXML)
+	return messages.ReadMessage(self.Reader, param, binaryXML)
 }
 
 func (self *Client) Receive(param *uint8, res interface{}) error {
