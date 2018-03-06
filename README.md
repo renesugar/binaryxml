@@ -117,19 +117,19 @@ for {
 
 Setup a workspace:
 
-```
+```sh
 $ mkdir -p workspaces/go/src/github.com/BixData
 $ cd workspaces/go
 $ export GOPATH=`pwd`
 $ cd src/github.com/BixData
 $ git clone <this repo>
 $ cd <this repo>
-$ make gogets
+$ make dependencies
 ```
 
 And then test with:
 
-```
+```sh
 $ go test ./...
 ok  	github.com/BixData/binaryxml	0.038s
 ok  	github.com/BixData/binaryxml/router	0.033s
