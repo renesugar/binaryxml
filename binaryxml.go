@@ -1,7 +1,5 @@
 package binaryxml
 
-import ()
-
 type BinXMLType uint8
 
 const (

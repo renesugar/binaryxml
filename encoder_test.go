@@ -5,12 +5,13 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"io/ioutil"
+	"testing"
+
 	"github.com/BixData/binaryxml"
 	"github.com/stretchr/testify/assert"
 	"github.com/tdewolff/minify"
 	xmlminifier "github.com/tdewolff/minify/xml"
-	"io/ioutil"
-	"testing"
 )
 
 // Numbered fixtures below correspond to C++ testdata. Alpha fixtures are original to this file.
@@ -274,7 +275,7 @@ func TestEncodeFixture3(t *testing.T) {
 	// Unmarshal binary XML file into 2nd Fixture3 structure
 	binaryXmlBytes, err := ioutil.ReadFile(file.Name())
 	if err != nil {
-		t.Errorf("Failed opening generated binary xml file %s", file.Name)
+		t.Errorf("Failed opening generated binary xml file %s", file.Name())
 	}
 	xmlString, err := binaryxml.ToXML(binaryXmlBytes)
 	assert.NoError(err)
