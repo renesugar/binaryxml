@@ -10,7 +10,7 @@ COPY . github.com/BixData/binaryxml
 
 # Download Go dependencies
 WORKDIR github.com/BixData/binaryxml
-RUN make gogets
+RUN make dependencies
 
 # Build
 RUN go install
