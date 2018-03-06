@@ -1,29 +1,40 @@
-pipeline {
-    agent { dockerfile true }
-    stages {
-        stage('Start') {
-            steps {
-                slackSend message:"${currentBuild.fullDisplayName} started (<${env.BUILD_URL}|Open>)"
-            }
-        }
-        stage('Test') {
-            steps {
-                sh 'make check'
-            }
-        }
+node {
+  def gitVersion, binaryxmlBuildEnvImage
+
+  try {
+    slackSend(message:"${currentBuild.fullDisplayName} started (<${env.BUILD_URL}|Open>)")
+
+    stage('Checkout') {
+      deleteDir()
+      checkout([
+          $class: 'GitSCM',
+          branches: scm.branches,
+          doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
+          extensions: [[$class:'CloneOption', noTags:false]],
+          userRemoteConfigs: scm.userRemoteConfigs
+      ])
+      gitVersion = sh(returnStdout:true, script:'./gitVersion.sh -f sem').trim()
+      echo "Version tag derived from Git is ${gitVersion}"
     }
-    post {
-        always {
-            junit 'target/test-report.xml'
-        }
-        success {
-            slackSend color:'good', message:"${currentBuild.fullDisplayName} completed successfully (<${env.BUILD_URL}|Open>)"
-        }
-        unstable {
-            slackSend color:'warning', message:"${currentBuild.fullDisplayName} has become unstable (<${env.BUILD_URL}|Open>)"
-        }
-        failure {
-            slackSend color:'bad', message:"${currentBuild.fullDisplayName} failed (<${env.BUILD_URL}|Open>)"
-        }
+
+    stage('Build') {
+      binaryxmlBuildEnvImage = docker.build("binaryxml-buildenv:${gitVersion}")
     }
+
+    stage('Test') {
+      sh 'mkdir -p target'
+      binaryxmlBuildEnvImage.withRun("-v ${pwd()}/target:/target", "make check TARGET=/target") { c ->
+        sh "docker wait ${c.id}"
+        sh "docker logs ${c.id}"
+        junit 'target/test-report.xml'
+      }
+    }
+
+    stage('Report') {
+      slackSend(color:'good', message:"${currentBuild.fullDisplayName} succeeded (<${env.BUILD_URL}|Open>)")
+    }
+  } catch (e) {
+    slackSend(color:'#ff0000', message:"${currentBuild.fullDisplayName} failed (<${env.BUILD_URL}|Open>)")
+    throw e
+  }
 }

@@ -2,19 +2,22 @@ FROM golang:1.9
 
 ARG REFRESHED_AT=2018-03-05
 
-WORKDIR /go/src
+# ============================================================
+# Add sources and install dependencies
+# ============================================================
 
-# Add library sources
-COPY . github.com/BixData/binaryxml
-
-# Download Go dependencies
-WORKDIR github.com/BixData/binaryxml
+COPY . $GOPATH/src/github.com/BixData/binaryxml
+WORKDIR $GOPATH/src/github.com/BixData/binaryxml
 RUN make dependencies
 
+# ============================================================
 # Build
+# ============================================================
+
+WORKDIR $GOPATH/src/github.com/BixData/binaryxml
 ENV GOOS=linux
 ENV CGO_ENABLED=0
-RUN go install
+RUN go install $GO_PACKAGE
 
 # Configure runtime environment
 VOLUME /go/src/github.com/BixData/binaryxml/target

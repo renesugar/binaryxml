@@ -1,8 +1,10 @@
+TARGET ?= ./target
+TEST_REPORT ?= $(TARGET)/test-report.xml
+
 .PHONY: check
 check:
-	-mkdir -p target
-	go test -v ./... | tee /dev/stderr | $$GOPATH/bin/go-junit-report > target/test-report.xml
-
+	mkdir -p $(TARGET)
+	go test -v ./... | tee /dev/stderr | $$GOPATH/bin/go-junit-report > $(TEST_REPORT)
 
 .PHONY: dependencies
 dependencies:
@@ -12,4 +14,4 @@ dependencies:
 
 .PHONY: clean
 clean:
-	-rm -rf target
+	-rm -rf $(TARGET)
