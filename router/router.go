@@ -166,7 +166,7 @@ type Router interface {
 	// Find a handler function to match the given request
 	findHandler(ctx *Context) HandlerFunc
 
-	Handle(ctx *Context)
+	Handle(ctx *Context) error
 }
 
 // ----------------------------------------------------------------------------
